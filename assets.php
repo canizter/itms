@@ -108,20 +108,52 @@ try {
 <!-- Search and Filter Bar -->
 <div class="search-filter-bar">
     <form method="GET" action="assets.php" id="searchForm">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Assets</h2>
-    </div>
-
-    <!-- Modal code removed -->
-    <!-- Add Bootstrap JS and CSS if not already included -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-                        <!-- Removed broken location select code that caused undefined variable warnings -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Assets</h2>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem;">
+            <div style="display: flex; flex-direction: column; min-width: 180px;">
+                <label for="search">Search</label>
+                <input type="text" name="search" id="search" class="form-control" placeholder="Search assets..." value="<?php echo htmlspecialchars($search); ?>">
+            </div>
+            <div style="display: flex; flex-direction: column;">
+                <label for="category">Category</label>
+                <select name="category" id="category" class="form-control">
+                    <option value="">All Categories</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo $cat['id']; ?>" <?php if ($category_filter == $cat['id']) echo 'selected'; ?>><?php echo htmlspecialchars($cat['name']); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
-            
-            <div style="display: flex; gap: 0.5rem; align-items: end;">
+            <div style="display: flex; flex-direction: column;">
+                <label for="status">Status</label>
+                <select name="status" id="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    <option value="In Use" <?php if ($status_filter == 'In Use') echo 'selected'; ?>>In Use</option>
+                    <option value="Available" <?php if ($status_filter == 'Available') echo 'selected'; ?>>Available</option>
+                    <option value="In Repair" <?php if ($status_filter == 'In Repair') echo 'selected'; ?>>In Repair</option>
+                    <option value="Retired" <?php if ($status_filter == 'Retired') echo 'selected'; ?>>Retired</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+                <label for="vendor">Vendor</label>
+                <select name="vendor" id="vendor" class="form-control">
+                    <option value="">All Vendors</option>
+                    <?php foreach ($vendors as $ven): ?>
+                        <option value="<?php echo $ven['id']; ?>" <?php if ($vendor_filter == $ven['id']) echo 'selected'; ?>><?php echo htmlspecialchars($ven['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+                <label for="location">Location</label>
+                <select name="location" id="location" class="form-control">
+                    <option value="">All Locations</option>
+                    <?php foreach ($locations as $loc): ?>
+                        <option value="<?php echo $loc['id']; ?>" <?php if ($location_filter == $loc['id']) echo 'selected'; ?>><?php echo htmlspecialchars($loc['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: flex-end; margin-bottom: 0;">
                 <button type="submit" class="btn btn-primary">Search</button>
                 <a href="assets.php" class="btn btn-secondary">Clear</a>
             </div>
@@ -139,8 +171,7 @@ try {
             <?php if (hasRole('manager')): ?>
                 <a href="asset_add.php" class="btn btn-success">Add New Asset</a>
             <?php endif; ?>
-            <button onclick="exportData('csv')" class="btn btn-secondary">Export CSV</button>
-            <button onclick="printPage()" class="btn btn-secondary">Print</button>
+            <a href="export_assets.php" class="btn btn-secondary">Export CSV</a>
         </div>
     </div>
     <div class="card-body">
