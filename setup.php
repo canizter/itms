@@ -1,6 +1,6 @@
 <?php
 // ITMS Setup Script
-// This script helps initialize the IT Inventory Management System
+// This script helps initialize the IT Management System
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -250,7 +250,7 @@ if ($_POST && !$setup_complete) {
         <?php if ($setup_complete): ?>
             <div class="setup-complete">
                 <h1>✅ Setup Complete!</h1>
-                <h2>IT Inventory Management System is ready to use</h2>
+                <h2>IT Management System is ready to use</h2>
                 
                 <?php foreach ($success_messages as $message): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
@@ -276,7 +276,7 @@ if ($_POST && !$setup_complete) {
         <?php else: ?>
             <h1>🔧 ITMS Setup Wizard</h1>
             <p style="text-align: center; color: #6c757d; margin-bottom: 2rem;">
-                Welcome! Let's set up your IT Inventory Management System.
+                Welcome! Let's set up your IT Management System.
             </p>
             
             <?php foreach ($errors as $error): ?>

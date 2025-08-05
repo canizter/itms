@@ -1,4 +1,4 @@
-// IT Inventory Management System JavaScript
+// IT Management System JavaScript
 
 // Global variables
 let currentPage = 1;

@@ -1,5 +1,5 @@
 <?php
-// Database configuration for IT Inventory Management System
+// Database configuration for IT Management System
 // Make sure to update these settings according to your XAMPP setup
 
 define('DB_HOST', 'localhost');
@@ -8,7 +8,7 @@ define('DB_PASSWORD', ''); // Default XAMPP MySQL password is empty
 define('DB_NAME', 'itms_db');
 
 // Application settings
-define('APP_NAME', 'IT Inventory Management System');
+define('APP_NAME', 'IT Management System');
 define('APP_VERSION', '1.2');
 define('BASE_URL', 'http://localhost/itms/');
 

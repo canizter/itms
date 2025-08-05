@@ -1,4 +1,4 @@
--- IT Inventory Management System Database
+-- IT Management System Database
 -- Created: August 3, 2025
 
 CREATE DATABASE IF NOT EXISTS itms_db;

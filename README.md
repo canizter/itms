@@ -1,4 +1,4 @@
-# IT Inventory Management System (ITMS)
+# IT Management System (ITMS)
 
 A comprehensive web-based solution for managing IT assets, built with PHP, MySQL, HTML, CSS, and JavaScript for use with XAMPP.
 
@@ -227,5 +227,5 @@ For technical support or questions:
 
 ---
 
-**© 2025 IT Inventory Management System**  
+**© 2025 IT Management System**  
 *Built for efficient IT asset tracking and management*

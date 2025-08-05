@@ -11,7 +11,7 @@ checkSessionTimeout();
     <title><?php echo $page_title ?? 'Dashboard'; ?> - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
-    <meta name="description" content="IT Inventory Management System">
+    <meta name="description" content="IT Management System">
     <meta name="author" content="ITMS">
 </head>
 <body>
