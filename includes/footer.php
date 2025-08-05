@@ -6,7 +6,7 @@
             <p>&copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?> v<?php echo APP_VERSION; ?>. All rights reserved.</p>
             <p style="font-size: 0.9rem; margin-top: 0.5rem;">
                 Developed for efficient IT asset management | 
-                <a href="mailto:admin@company.com" style="color: #667eea; text-decoration: none;">Support</a>
+                <a href="http://help.linc-fs.com" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">Support</a>
             </p>
         </div>
     </footer>

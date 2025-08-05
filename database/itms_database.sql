@@ -61,13 +61,15 @@ CREATE TABLE IF NOT EXISTS assets (
     purchase_price DECIMAL(10,2),
     warranty_expiry DATE,
     status ENUM('active', 'inactive', 'maintenance', 'disposed') DEFAULT 'active',
-    assigned_to VARCHAR(100),
+    assigned_to_employee_id INT,
+    -- assigned_to VARCHAR(100),
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id),
     FOREIGN KEY (vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (location_id) REFERENCES locations(id)
+    FOREIGN KEY (location_id) REFERENCES locations(id),
+    FOREIGN KEY (assigned_to_employee_id) REFERENCES employees(id)
 );
 
 -- Employees table
@@ -83,10 +85,11 @@ CREATE TABLE IF NOT EXISTS employees (
 -- Asset history table for tracking changes
 CREATE TABLE IF NOT EXISTS asset_history (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    asset_id INT,
-    action VARCHAR(100) NOT NULL,
+    asset_id INT NOT NULL,
+    field_changed VARCHAR(100) NOT NULL,
     old_value TEXT,
     new_value TEXT,
+    action VARCHAR(100) NOT NULL,
     changed_by VARCHAR(100),
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (asset_id) REFERENCES assets(id)
@@ -113,13 +116,14 @@ CREATE TABLE IF NOT EXISTS software_licenses (
 CREATE TABLE IF NOT EXISTS asset_assignments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asset_id INT,
-    assigned_to VARCHAR(100) NOT NULL,
+    employee_id INT NOT NULL,
     assigned_by VARCHAR(100),
     assigned_date DATE NOT NULL,
     return_date DATE,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (asset_id) REFERENCES assets(id)
+    FOREIGN KEY (asset_id) REFERENCES assets(id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 
 -- Insert default data

@@ -31,9 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 if (isset($_GET['delete'])) {
-    $stmt = $pdo->prepare('DELETE FROM locations WHERE id=?');
+    // Check if location is assigned to any asset
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM assets WHERE location_id=?');
     $stmt->execute([$_GET['delete']]);
-    $success = 'Location deleted.';
+    $in_use = $stmt->fetchColumn();
+    if ($in_use > 0) {
+        $delete_error = 'Cannot delete: This location is assigned to one or more assets.';
+    } else {
+        $stmt = $pdo->prepare('DELETE FROM locations WHERE id=?');
+        $stmt->execute([$_GET['delete']]);
+        $success = 'Location deleted.';
+    }
 }
 if ($id) {
     $stmt = $pdo->prepare('SELECT * FROM locations WHERE id=?');
@@ -44,24 +52,69 @@ if ($id) {
 $rows = $pdo->query('SELECT * FROM locations ORDER BY id DESC')->fetchAll();
 ?>
 <div class="container mt-4">
-    <h2>Locations</h2>
+    <h2 class="mb-4">Locations</h2>
     <?php if ($success): ?><div class="alert alert-success"><?=htmlspecialchars($success)?></div><?php endif; ?>
     <?php foreach ($errors as $e): ?><div class="alert alert-danger"><?=htmlspecialchars($e)?></div><?php endforeach; ?>
-    <form method="post" class="mb-3">
-        <input type="hidden" name="id" value="<?=htmlspecialchars($id)?>">
-        <div class="form-group">
-            <label>Name</label>
-            <input type="text" name="name" class="form-control" value="<?=htmlspecialchars($name)?>" required>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#addLocationModal">+ Add Location</button>
+    </div>
+
+    <!-- Add Location Modal -->
+    <div class="modal fade" id="addLocationModal" tabindex="-1" role="dialog" aria-labelledby="addLocationModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <form method="post">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addLocationModalLabel">Add Location</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="location_name">Location Name</label>
+                <input type="text" class="form-control" id="location_name" name="name" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
         </div>
-        <button class="btn btn-primary mt-2">Save</button>
-        <?php if ($id): ?><a href="locations.php" class="btn btn-secondary mt-2">Cancel</a><?php endif; ?>
-    </form>
+      </div>
+    </div>
+    <!-- Add Bootstrap JS and CSS if not already included -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <?php if (!empty($delete_error)): ?>
+    <!-- Error Modal -->
+    <div class="modal fade" id="deleteErrorModal" tabindex="-1" role="dialog" aria-labelledby="deleteErrorModalLabel" aria-hidden="true" style="display:block;">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="deleteErrorModalLabel">Delete Error</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="$('#deleteErrorModal').modal('hide');">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <?php echo htmlspecialchars($delete_error); ?>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="$('#deleteErrorModal').modal('hide');">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>$(function() { $('#deleteErrorModal').modal('show'); });</script>
+    <?php endif; ?>
     <table class="table table-bordered">
-        <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Name</th><th>Actions</th></tr></thead>
         <tbody>
         <?php foreach ($rows as $r): ?>
             <tr>
-                <td><?=htmlspecialchars($r['id'])?></td>
                 <td><?=htmlspecialchars($r['name'])?></td>
                 <td>
                     <a href="locations.php?id=<?=$r['id']?>" class="btn btn-sm btn-info">Edit</a>

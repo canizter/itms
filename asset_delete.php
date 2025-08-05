@@ -21,6 +21,9 @@ if (!$asset) {
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
+        // Delete related asset_assignments and asset_history first to avoid FK constraint errors
+        $pdo->prepare('DELETE FROM asset_assignments WHERE asset_id = ?')->execute([$asset_id]);
+        $pdo->prepare('DELETE FROM asset_history WHERE asset_id = ?')->execute([$asset_id]);
         $stmt = $pdo->prepare('DELETE FROM assets WHERE id = ?');
         $stmt->execute([$asset_id]);
         header('Location: assets.php?deleted=1');

@@ -37,6 +37,11 @@ checkSessionTimeout();
         <div class="nav-container">
             <ul class="nav-menu">
                 <li class="nav-item">
+                    <a href="profile.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'profile.php') ? 'active' : ''; ?>">
+                        Profile
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="dashboard.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>">
                         Dashboard
                     </a>

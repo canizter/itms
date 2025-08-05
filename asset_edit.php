@@ -33,6 +33,8 @@ $description = $asset['description'];
 $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
 $vendors = $pdo->query('SELECT id, name FROM vendors ORDER BY name')->fetchAll();
 $locations = $pdo->query('SELECT id, name FROM locations ORDER BY name')->fetchAll();
+$employees = $pdo->query('SELECT id, employee_id, name FROM employees ORDER BY name')->fetchAll();
+$assigned_to_employee_id = $asset['assigned_to_employee_id'] ?? null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $asset_tag = trim($_POST['asset_tag'] ?? '');
@@ -44,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $purchase_date = $_POST['purchase_date'] ?? '';
     $serial_number = trim($_POST['serial_number'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $assigned_to_employee_id = isset($_POST['assigned_to_employee_id']) && $_POST['assigned_to_employee_id'] !== '' ? $_POST['assigned_to_employee_id'] : null;
 
     if ($asset_tag === '') $errors[] = 'Asset tag is required.';
     if ($name === '') $errors[] = 'Asset name is required.';
@@ -52,8 +55,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$location_id) $errors[] = 'Location is required.';
 
     if (!$errors) {
-        $stmt = $pdo->prepare('UPDATE assets SET asset_tag=?, name=?, category_id=?, vendor_id=?, location_id=?, status=?, purchase_date=?, serial_number=?, description=? WHERE id=?');
-        $stmt->execute([$asset_tag, $name, $category_id, $vendor_id, $location_id, $status, $purchase_date, $serial_number, $description, $asset_id]);
+        // Log changes for each field
+        $fields = ['asset_tag','name','category_id','vendor_id','location_id','status','purchase_date','serial_number','description','assigned_to_employee_id'];
+        foreach ($fields as $field) {
+            $old = $asset[$field] ?? '';
+            $new = $$field;
+            if ($old != $new) {
+                $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
+                $log_stmt->execute([$asset_id, $field, $old, $new, 'edit', $_SESSION['username'] ?? 'system']);
+            }
+        }
+        // Determine new status: 'active' (In Use) if assigned, 'inactive' (Available) if not
+        $auto_status = !is_null($assigned_to_employee_id) ? 'active' : 'inactive';
+        $stmt = $pdo->prepare('UPDATE assets SET asset_tag=?, name=?, category_id=?, vendor_id=?, location_id=?, status=?, purchase_date=?, serial_number=?, description=?, assigned_to_employee_id=? WHERE id=?');
+        $stmt->execute([$asset_tag, $name, $category_id, $vendor_id, $location_id, $auto_status, $purchase_date, $serial_number, $description, $assigned_to_employee_id, $asset_id]);
+        // Record assignment change if changed and not null
+        $current = $asset['assigned_to_employee_id'] ?? null;
+        if ($assigned_to_employee_id != $current) {
+            $assign_stmt = $pdo->prepare('INSERT INTO asset_assignments (asset_id, employee_id, assigned_by, assigned_date, notes) VALUES (?, ?, ?, ?, ?)');
+            $assign_stmt->execute([
+                $asset_id,
+                $assigned_to_employee_id,
+                $_SESSION['username'] ?? 'system',
+                date('Y-m-d'),
+                'Assignment changed via edit'
+            ]);
+            // Update the asset's current assignment and status
+            $update_asset_stmt = $pdo->prepare('UPDATE assets SET assigned_to_employee_id = ?, status = ? WHERE id = ?');
+            $update_asset_stmt->execute([$assigned_to_employee_id, $auto_status, $asset_id]);
+            // Log assignment
+            $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
+            $log_stmt->execute([$asset_id, 'assigned_to_employee_id', $current, $assigned_to_employee_id, 'assign', $_SESSION['username'] ?? 'system']);
+        }
         header('Location: assets.php?updated=1');
         exit;
     }
@@ -66,6 +99,34 @@ include 'includes/header.php';
         <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
     <?php endforeach; ?>
     <form method="post">
+        <div class="form-group">
+            <label>Assign to Employee</label>
+            <?php if (!empty($asset['assigned_to_employee_id'])): ?>
+                <div class="alert alert-info">This asset is currently assigned. Please return it before assigning to another employee.</div>
+                <select name="assigned_to_employee_id" class="form-control" disabled>
+                    <option value="<?php echo $assigned_to_employee_id; ?>" selected>
+                        <?php 
+                        foreach ($employees as $emp) {
+                            if ($emp['id'] == $assigned_to_employee_id) {
+                                echo htmlspecialchars($emp['employee_id'] . ' - ' . $emp['name']);
+                                break;
+                            }
+                        }
+                        ?>
+                    </option>
+                </select>
+            <?php else: ?>
+                <select name="assigned_to_employee_id" class="form-control">
+                    <option value="">-- Unassigned --</option>
+                    <?php foreach ($employees as $emp): ?>
+                        <option value="<?php echo $emp['id']; ?>" <?php if ($assigned_to_employee_id == $emp['id']) echo 'selected'; ?>>
+                            <?php echo htmlspecialchars($emp['employee_id'] . ' - ' . $emp['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+        </div>
+        <div class="form-group">
         <div class="form-group">
             <label>Asset Tag</label>
             <input type="text" name="asset_tag" class="form-control" value="<?php echo htmlspecialchars($asset_tag); ?>" required>
@@ -104,26 +165,27 @@ include 'includes/header.php';
         <div class="form-group">
             <label>Status</label>
             <select name="status" class="form-control">
-                <option value="active" <?php if ($status === 'active') echo 'selected'; ?>>Active</option>
-                <option value="inactive" <?php if ($status === 'inactive') echo 'selected'; ?>>Inactive</option>
-                <option value="maintenance" <?php if ($status === 'maintenance') echo 'selected'; ?>>Maintenance</option>
-                <option value="disposed" <?php if ($status === 'disposed') echo 'selected'; ?>>Disposed</option>
+                <option value="active" <?php if ($status === 'active') echo 'selected'; ?>>In Use</option>
+                <option value="inactive" <?php if ($status === 'inactive') echo 'selected'; ?>>Available</option>
+                <option value="maintenance" <?php if ($status === 'maintenance') echo 'selected'; ?>>In Repair</option>
+                <option value="disposed" <?php if ($status === 'disposed') echo 'selected'; ?>>Retired</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>Purchase Date</label>
-            <input type="date" name="purchase_date" class="form-control" value="<?php echo htmlspecialchars($purchase_date); ?>">
-        </div>
+
         <div class="form-group">
             <label>Serial Number</label>
             <input type="text" name="serial_number" class="form-control" value="<?php echo htmlspecialchars($serial_number); ?>">
         </div>
         <div class="form-group">
-            <label>Description</label>
+            <label>Notes or Remarks</label>
             <textarea name="description" class="form-control"><?php echo htmlspecialchars($description); ?></textarea>
         </div>
         <button type="submit" class="btn btn-success">Update Asset</button>
         <a href="assets.php" class="btn btn-secondary ml-2">Cancel</a>
+        <a href="asset_assignments.php?asset_id=<?php echo $asset_id; ?>" class="btn btn-info ml-2">View Assignment History</a>
+        <?php if (!empty($asset['assigned_to_employee_id'])): ?>
+            <a href="asset_return.php?id=<?php echo $asset_id; ?>" class="btn btn-danger ml-2" onclick="return confirm('Mark this asset as returned?');">Return</a>
+        <?php endif; ?>
     </form>
 </div>
 <?php include 'includes/footer.php'; ?>

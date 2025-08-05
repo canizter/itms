@@ -262,16 +262,16 @@ if ($_POST && !$setup_complete) {
                         <li>Access your system: <a href="index.php">Open ITMS</a></li>
                         <li>Login with default credentials: <strong>admin</strong> / <strong>admin123</strong></li>
                         <li>Change the default admin password</li>
+                        <li>User roles:<br>
+                            <strong>Admin</strong>: Full access<br>
+                            <strong>Viewer</strong>: Can view all assets, employees, and assignments, but cannot add, edit, or delete.<br>
+                        </li>
                         <li>Add your organization's <a href="categories.php">categories</a>, vendors, and locations</li>
-                        <li>Start adding your IT assets</li>
+                        <li>Start adding your IT assets (Asset Tag, Name, etc.)</li>
                     </ul>
                 </div>
 
-                <div style="margin-top: 2rem;">
-                    <a href="index.php" class="btn-link">🚀 Launch ITMS</a>
-                    <a href="categories.php" class="btn-link">➕ Add Categories</a>
-                    <a href="README.md" class="btn-link" target="_blank">📖 Read Documentation</a>
-                </div>
+                <!-- Quick actions removed -->
             </div>
         <?php else: ?>
             <h1>🔧 ITMS Setup Wizard</h1>

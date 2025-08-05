@@ -32,7 +32,7 @@ try {
     $params = [];
     
     if (!empty($search)) {
-        $where_conditions[] = "(a.asset_tag LIKE ? OR a.name LIKE ? OR a.description LIKE ? OR a.serial_number LIKE ?)";
+        $where_conditions[] = "(a.asset_tag LIKE ? OR a.name LIKE ? OR a.description LIKE ? OR a.serial_number LIKE ?)"; // description = notes or remarks
         $search_param = "%{$search}%";
         $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param]);
     }
@@ -51,12 +51,6 @@ try {
         $where_conditions[] = "a.vendor_id = ?";
         $params[] = $vendor_filter;
     }
-    
-    if (!empty($location_filter)) {
-        $where_conditions[] = "a.location_id = ?";
-        $params[] = $location_filter;
-    }
-    
     $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
     
     // Get total count
@@ -73,13 +67,15 @@ try {
     $total_records = $stmt->fetch()['total'];
     $total_pages = ceil($total_records / $limit);
     
-    // Get assets
+    // Get assets with assigned employee info
     $sql = "
-        SELECT a.*, c.name as category_name, v.name as vendor_name, l.name as location_name
+        SELECT a.*, c.name as category_name, v.name as vendor_name, l.name as location_name,
+               e.employee_id as assigned_employee_id, e.name as assigned_employee_name
         FROM assets a 
         LEFT JOIN categories c ON a.category_id = c.id
         LEFT JOIN vendors v ON a.vendor_id = v.id
         LEFT JOIN locations l ON a.location_id = l.id
+        LEFT JOIN employees e ON a.assigned_to_employee_id = e.id
         {$where_clause}
         ORDER BY {$sort} {$order}
         LIMIT {$limit} OFFSET {$offset}
@@ -112,64 +108,16 @@ try {
 <!-- Search and Filter Bar -->
 <div class="search-filter-bar">
     <form method="GET" action="assets.php" id="searchForm">
-        <div class="form-row">
-            <div class="search-group">
-                <label for="search" class="form-label">Search</label>
-                <input type="text" 
-                       id="search" 
-                       name="search" 
-                       class="form-control search-input" 
-                       placeholder="Search by tag, name, description, or serial number..."
-                       value="<?php echo htmlspecialchars($search); ?>">
-            </div>
-            
-            <div class="form-col">
-                <label for="category" class="form-label">Category</label>
-                <select name="category" id="category" class="form-control filter-select">
-                    <option value="">All Categories</option>
-                    <?php foreach ($categories as $category): ?>
-                        <option value="<?php echo $category['id']; ?>" 
-                                <?php echo $category_filter == $category['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($category['name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <div class="form-col">
-                <label for="status" class="form-label">Status</label>
-                <select name="status" id="status" class="form-control filter-select">
-                    <option value="">All Status</option>
-                    <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>Active</option>
-                    <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                    <option value="maintenance" <?php echo $status_filter === 'maintenance' ? 'selected' : ''; ?>>Maintenance</option>
-                    <option value="disposed" <?php echo $status_filter === 'disposed' ? 'selected' : ''; ?>>Disposed</option>
-                </select>
-            </div>
-            
-            <div class="form-col">
-                <label for="vendor" class="form-label">Vendor</label>
-                <select name="vendor" id="vendor" class="form-control filter-select">
-                    <option value="">All Vendors</option>
-                    <?php foreach ($vendors as $vendor): ?>
-                        <option value="<?php echo $vendor['id']; ?>" 
-                                <?php echo $vendor_filter == $vendor['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($vendor['name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <div class="form-col">
-                <label for="location" class="form-label">Location</label>
-                <select name="location" id="location" class="form-control filter-select">
-                    <option value="">All Locations</option>
-                    <?php foreach ($locations as $location): ?>
-                        <option value="<?php echo $location['id']; ?>" 
-                                <?php echo $location_filter == $location['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($location['name']); ?>
-                        </option>
-                    <?php endforeach; ?>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Assets</h2>
+    </div>
+
+    <!-- Modal code removed -->
+    <!-- Add Bootstrap JS and CSS if not already included -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+                        <!-- Removed broken location select code that caused undefined variable warnings -->
                 </select>
             </div>
             
@@ -215,17 +163,13 @@ try {
                                     <?php echo $order === 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </th>
-                            <th data-sort="name" data-order="<?php echo $sort === 'name' ? $order : 'asc'; ?>">
-                                Name
-                                <?php if ($sort === 'name'): ?>
-                                    <?php echo $order === 'ASC' ? '↑' : '↓'; ?>
-                                <?php endif; ?>
-                            </th>
+                            <!-- Name column removed -->
                             <th>Category</th>
                             <th>Vendor</th>
                             <th>Location</th>
                             <th>Status</th>
-                            <th>Purchase Date</th>
+                            <th>Assigned Employee ID</th>
+                            <th>Assigned Employee Name</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -237,68 +181,47 @@ try {
                                         <strong><?php echo htmlspecialchars($asset['asset_tag']); ?></strong>
                                     </a>
                                 </td>
-                                <td><?php echo htmlspecialchars($asset['name']); ?></td>
+                                <!-- Asset Name column fully removed -->
                                 <td><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($asset['location_name'] ?? 'N/A'); ?></td>
                                 <td>
                                     <span class="badge badge-<?php 
-                                        echo $asset['status'] === 'active' ? 'success' : 
-                                            ($asset['status'] === 'maintenance' ? 'warning' : 
-                                            ($asset['status'] === 'disposed' ? 'danger' : 'secondary')); 
+                                        echo $asset['status'] === 'In Use' ? 'success' : 
+                                            ($asset['status'] === 'In Repair' ? 'warning' : 
+                                            ($asset['status'] === 'Retired' ? 'danger' : 'secondary'));
                                     ?>">
-                                        <?php echo ucfirst($asset['status']); ?>
+                                    <?php 
+                                        $status_map = [
+                                            'active' => 'In Use',
+                                            'inactive' => 'Available',
+                                            'maintenance' => 'In Repair',
+                                            'disposed' => 'Retired',
+                                            'In Use' => 'In Use',
+                                            'Available' => 'Available',
+                                            'In Repair' => 'In Repair',
+                                            'Retired' => 'Retired',
+                                        ];
+                                        $display_status = $status_map[$asset['status']] ?? htmlspecialchars($asset['status']);
+                                        echo $display_status;
+                                    ?>
                                     </span>
                                 </td>
-                                <td><?php echo formatDate($asset['purchase_date']); ?></td>
+                                <td><?php echo htmlspecialchars($asset['assigned_employee_id'] ?? ''); ?></td>
+                                <td><?php echo htmlspecialchars($asset['assigned_employee_name'] ?? ''); ?></td>
                                 <td>
-                                    <div class="d-flex gap-1">
-                                        <a href="asset_details.php?id=<?php echo $asset['id']; ?>" 
-                                           class="btn btn-primary btn-sm" 
-                                           data-tooltip="View Details">📋</a>
-                                        
-                                        <?php if (hasRole('manager')): ?>
-                                            <a href="asset_edit.php?id=<?php echo $asset['id']; ?>" 
-                                               class="btn btn-warning btn-sm" 
-                                               data-tooltip="Edit Asset">✏️</a>
-                                        <?php endif; ?>
-                                        
-                                        <?php if (hasRole('admin')): ?>
-                                            <a href="asset_delete.php?id=<?php echo $asset['id']; ?>" 
-                                               class="btn btn-danger btn-sm" 
-                                               data-tooltip="Delete Asset"
-                                               onclick="return confirmDelete('<?php echo htmlspecialchars($asset['name']); ?>')">🗑️</a>
-                                        <?php endif; ?>
-                                    </div>
+                                    <a href="asset_details.php?id=<?php echo $asset['id']; ?>" class="btn btn-info btn-sm" title="View"><i class="fa fa-eye"></i> View</a>
+                                    <?php if (hasRole('manager')): ?>
+                                        <a href="asset_edit.php?id=<?php echo $asset['id']; ?>" class="btn btn-warning btn-sm" title="Edit"><i class="fa fa-edit"></i> Edit</a>
+                                        <a href="asset_delete.php?id=<?php echo $asset['id']; ?>" class="btn btn-danger btn-sm" title="Delete" onclick="return confirm('Are you sure you want to delete this asset?');"><i class="fa fa-trash"></i> Delete</a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Pagination -->
-            <?php if ($total_pages > 1): ?>
-                <nav>
-                    <ul class="pagination">
-                        <?php if ($page > 1): ?>
-                            <li><a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>">« Previous</a></li>
-                        <?php endif; ?>
-                        
-                        <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
-                            <li class="<?php echo $i === $page ? 'active' : ''; ?>">
-                                <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>"><?php echo $i; ?></a>
-                            </li>
-                        <?php endfor; ?>
-                        
-                        <?php if ($page < $total_pages): ?>
-                            <li><a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>">Next »</a></li>
-                        <?php endif; ?>
-                    </ul>
-                </nav>
-            <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>
-
 <?php require_once 'includes/footer.php'; ?>

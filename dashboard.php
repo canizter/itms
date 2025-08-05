@@ -10,24 +10,24 @@ try {
     $stats = [];
     
     // Total assets
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status != 'disposed'");
-    $stats['total_assets'] = $stmt->fetch()['total'];
-    
-    // Active assets
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'active'");
-    $stats['active_assets'] = $stmt->fetch()['total'];
-    
-    // Assets in maintenance
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'maintenance'");
-    $stats['maintenance_assets'] = $stmt->fetch()['total'];
-    
-    // Total categories
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM categories");
-    $stats['total_categories'] = $stmt->fetch()['total'];
-    
-    // Total vendors
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM vendors");
-    $stats['total_vendors'] = $stmt->fetch()['total'];
+        // Total assets (not retired)
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status != 'Retired'");
+        $stats['total_assets'] = $stmt->fetch()['total'];
+
+        // In Use assets
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'In Use'");
+        $stats['in_use_assets'] = $stmt->fetch()['total'];
+
+        // Available assets
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'Available'");
+        $stats['available_assets'] = $stmt->fetch()['total'];
+
+        // Active assets = In Use + Available
+        $stats['active_assets'] = $stats['in_use_assets'] + $stats['available_assets'];
+
+        // In Repair assets
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'In Repair'");
+        $stats['in_repair_assets'] = $stmt->fetch()['total'];
     
     // Assets by category
     $stmt = $pdo->query("
@@ -89,19 +89,16 @@ try {
         <div class="stat-number"><?php echo number_format($stats['active_assets']); ?></div>
         <div class="stat-label">Active Assets</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-number"><?php echo number_format($stats['maintenance_assets']); ?></div>
-        <div class="stat-label">In Maintenance</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number"><?php echo number_format($stats['total_categories']); ?></div>
-        <div class="stat-label">Categories</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number"><?php echo number_format($stats['total_vendors']); ?></div>
-        <div class="stat-label">Vendors</div>
-    </div>
+        <div class="stat-card">
+            <div class="stat-number"><?php echo number_format($stats['in_use_assets']); ?></div>
+            <div class="stat-label">In Use</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number"><?php echo number_format($stats['in_repair_assets']); ?></div>
+            <div class="stat-label">In Repair</div>
+        </div>
 </div>
+    <!-- Removed In Maintenance, Categories, Vendors cards; replaced with In Repair and In Use -->
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
     <!-- Recent Assets -->
@@ -119,10 +116,8 @@ try {
                         <thead>
                             <tr>
                                 <th>Asset Tag</th>
-                                <th>Name</th>
                                 <th>Category</th>
-                                <th>Status</th>
-                                <th>Added</th>
+                                <th>Vendor</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -133,17 +128,8 @@ try {
                                             <?php echo htmlspecialchars($asset['asset_tag']); ?>
                                         </a>
                                     </td>
-                                    <td><?php echo htmlspecialchars($asset['name']); ?></td>
                                     <td><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
-                                    <td>
-                                        <span class="badge badge-<?php 
-                                            echo $asset['status'] === 'active' ? 'success' : 
-                                                ($asset['status'] === 'maintenance' ? 'warning' : 'secondary'); 
-                                        ?>">
-                                            <?php echo ucfirst($asset['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo formatDate($asset['created_at']); ?></td>
+                                    <td><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -225,27 +211,6 @@ try {
 </div>
 <?php endif; ?>
 
-<!-- Quick Actions -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Quick Actions</h3>
-    </div>
-    <div class="card-body">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-            <a href="asset_add.php" class="btn btn-success" style="padding: 1rem; text-align: center;">
-                📋 Add New Asset
-            </a>
-            <a href="assets.php?status=maintenance" class="btn btn-warning" style="padding: 1rem; text-align: center;">
-                🔧 View Maintenance Items
-            </a>
-            <a href="reports.php" class="btn btn-primary" style="padding: 1rem; text-align: center;">
-                📊 Generate Reports
-            </a>
-            <a href="software.php" class="btn btn-secondary" style="padding: 1rem; text-align: center;">
-                💾 Manage Software
-            </a>
-        </div>
-    </div>
-</div>
+<!-- Quick Actions removed -->
 
 <?php require_once 'includes/footer.php'; ?>
