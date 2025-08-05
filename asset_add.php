@@ -9,7 +9,7 @@ $pdo = getDBConnection();
 
 $errors = [];
 $success = '';
-$name = $asset_tag = $category_id = $vendor_id = $location_id = $status = $purchase_date = $serial_number = $description = '';
+$asset_tag = $category_id = $vendor_id = $location_id = $status = $serial_number = $lan_mac = $wlan_mac = '';
 
 // Fetch categories, vendors, locations for dropdowns
 $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
@@ -25,15 +25,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location_id = $_POST['location_id'] ?? '';
     $status = $_POST['status'] ?? 'active';
     $assigned_to_employee_id = isset($_POST['assigned_to_employee_id']) && $_POST['assigned_to_employee_id'] !== '' ? $_POST['assigned_to_employee_id'] : null;
-    $purchase_date = $_POST['purchase_date'] ?? '';
     $serial_number = trim($_POST['serial_number'] ?? '');
-    $description = trim($_POST['description'] ?? '');
+    $lan_mac = trim($_POST['lan_mac'] ?? '');
+    $wlan_mac = trim($_POST['wlan_mac'] ?? '');
 
     if ($asset_tag === '') $errors[] = 'Asset tag is required.';
     if (!$category_id) $errors[] = 'Category is required.';
     if (!$vendor_id) $errors[] = 'Vendor is required.';
     if (!$location_id) $errors[] = 'Location is required.';
+
     if ($serial_number === '') $errors[] = 'Serial Number is required.';
+    // MAC address validation regex
+    $mac_regex = '/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/';
+    if ($lan_mac !== '' && !preg_match($mac_regex, $lan_mac)) {
+        $errors[] = 'LAN MAC Address must be in format 00:11:22:33:44:55.';
+    }
+    if ($wlan_mac !== '' && !preg_match($mac_regex, $wlan_mac)) {
+        $errors[] = 'WLAN MAC Address must be in format 00:11:22:33:44:55.';
+    }
     // Check for duplicate serial number
     if ($serial_number !== '') {
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM assets WHERE serial_number = ?');
@@ -47,12 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Set status automatically: 'active' (In Use) if assigned, 'inactive' (Available) if not
         $auto_status = !is_null($assigned_to_employee_id) ? 'active' : 'inactive';
         try {
-            $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, location_id, status, purchase_date, serial_number, description, assigned_to_employee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $purchase_date, $serial_number, $description, $assigned_to_employee_id]);
+            $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, location_id, status, serial_number, lan_mac, wlan_mac, assigned_to_employee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $serial_number, $lan_mac, $wlan_mac, $assigned_to_employee_id]);
             $new_asset_id = $pdo->lastInsertId();
             // Log asset creation
             $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
-            $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'location_id'=>$location_id,'status'=>$auto_status,'purchase_date'=>$purchase_date,'serial_number'=>$serial_number,'description'=>$description,'assigned_to_employee_id'=>$assigned_to_employee_id]), 'create', $_SESSION['username'] ?? 'system']);
+            $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'location_id'=>$location_id,'status'=>$auto_status,'serial_number'=>$serial_number,'lan_mac'=>$lan_mac,'wlan_mac'=>$wlan_mac,'assigned_to_employee_id'=>$assigned_to_employee_id]), 'create', $_SESSION['username'] ?? 'system']);
             // Insert into asset_assignments history only if assigned
             if (!is_null($assigned_to_employee_id)) {
                 $assign_stmt = $pdo->prepare('INSERT INTO asset_assignments (asset_id, employee_id, assigned_by, assigned_date, notes) VALUES (?, ?, ?, ?, ?)');
@@ -149,9 +158,14 @@ include 'includes/header.php';
             <input type="text" name="serial_number" class="form-control" value="<?php echo htmlspecialchars($serial_number); ?>">
         </div>
         <div class="form-group">
-            <label>Notes or Remarks</label>
-            <textarea name="description" class="form-control"><?php echo htmlspecialchars($description); ?></textarea>
+            <label>LAN MAC Address</label>
+            <input type="text" name="lan_mac" class="form-control" value="<?php echo htmlspecialchars($lan_mac); ?>" placeholder="e.g. 00:11:22:33:44:55">
         </div>
+        <div class="form-group">
+            <label>WLAN MAC Address</label>
+            <input type="text" name="wlan_mac" class="form-control" value="<?php echo htmlspecialchars($wlan_mac); ?>" placeholder="e.g. 66:77:88:99:AA:BB">
+        </div>
+        <!-- Notes or Remarks field removed -->
         <button type="submit" class="btn btn-success">Add Asset</button>
         <a href="assets.php" class="btn btn-secondary ml-2">Cancel</a>
     </form>

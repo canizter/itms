@@ -29,7 +29,7 @@ $history = $stmt->fetchAll();
 include 'includes/header.php';
 ?>
 <div class="container mt-4">
-    <h2>Assignment History for Asset: <?php echo htmlspecialchars($asset['name']); ?></h2>
+    <h2>Assignment History for Asset: <?php echo htmlspecialchars($asset['asset_tag'] ?? ''); ?></h2>
     <a href="asset_details.php?id=<?php echo $asset_id; ?>" class="btn btn-secondary mb-3">&larr; Back to Asset Details</a>
     <div class="card">
         <div class="card-body">

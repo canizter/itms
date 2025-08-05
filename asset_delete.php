@@ -12,7 +12,7 @@ if (!$asset_id) {
     exit;
 }
 // Fetch asset for confirmation
-$stmt = $pdo->prepare('SELECT name FROM assets WHERE id = ?');
+$stmt = $pdo->prepare('SELECT asset_tag FROM assets WHERE id = ?');
 $stmt->execute([$asset_id]);
 $asset = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$asset) {
@@ -39,7 +39,7 @@ include 'includes/header.php';
     <h2>Delete Asset</h2>
     <div class="alert alert-warning">
         <strong>Are you sure you want to delete this asset?</strong><br>
-        Asset: <strong><?php echo htmlspecialchars($asset['name']); ?></strong>
+        Asset: <strong><?php echo htmlspecialchars($asset['asset_tag']); ?></strong>
     </div>
     <form method="post">
         <button type="submit" name="confirm" value="yes" class="btn btn-danger">Yes, Delete</button>

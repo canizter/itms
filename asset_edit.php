@@ -1,8 +1,8 @@
 <?php
 // asset_edit.php - Edit Asset
 require_once 'config/config.php';
-if (!hasRole('manager')) {
-    header('Location: assets.php');
+if (!isLoggedIn()) {
+    header('Location: login.php');
     exit;
 }
 $pdo = getDBConnection();
@@ -19,56 +19,53 @@ if (!$asset) {
     exit;
 }
 $errors = [];
-$success = '';
-$name = $asset['name'];
 $asset_tag = $asset['asset_tag'];
 $category_id = $asset['category_id'];
 $vendor_id = $asset['vendor_id'];
 $location_id = $asset['location_id'];
-$status = $asset['status'];
-$purchase_date = $asset['purchase_date'];
 $serial_number = $asset['serial_number'];
-$description = $asset['description'];
+$lan_mac = $asset['lan_mac'] ?? '';
+$wlan_mac = $asset['wlan_mac'] ?? '';
+$status = $asset['status'];
+$assigned_to_employee_id = $asset['assigned_to_employee_id'] ?? null;
 
 $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
 $vendors = $pdo->query('SELECT id, name FROM vendors ORDER BY name')->fetchAll();
-$locations = $pdo->query('SELECT id, name FROM locations ORDER BY name')->fetchAll();
 $employees = $pdo->query('SELECT id, employee_id, name FROM employees ORDER BY name')->fetchAll();
-$assigned_to_employee_id = $asset['assigned_to_employee_id'] ?? null;
+$locations = $pdo->query('SELECT id, name FROM locations ORDER BY name')->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $asset_tag = trim($_POST['asset_tag'] ?? '');
-    $name = trim($_POST['name'] ?? '');
     $category_id = $_POST['category_id'] ?? '';
     $vendor_id = $_POST['vendor_id'] ?? '';
     $location_id = $_POST['location_id'] ?? '';
     $status = $_POST['status'] ?? 'active';
-    $purchase_date = $_POST['purchase_date'] ?? '';
     $serial_number = trim($_POST['serial_number'] ?? '');
-    $description = trim($_POST['description'] ?? '');
+    $lan_mac = trim($_POST['lan_mac'] ?? '');
+    $wlan_mac = trim($_POST['wlan_mac'] ?? '');
     $assigned_to_employee_id = isset($_POST['assigned_to_employee_id']) && $_POST['assigned_to_employee_id'] !== '' ? $_POST['assigned_to_employee_id'] : null;
 
     if ($asset_tag === '') $errors[] = 'Asset tag is required.';
-    if ($name === '') $errors[] = 'Asset name is required.';
     if (!$category_id) $errors[] = 'Category is required.';
     if (!$vendor_id) $errors[] = 'Vendor is required.';
     if (!$location_id) $errors[] = 'Location is required.';
+    if ($serial_number === '') $errors[] = 'Serial number is required.';
+
+    // MAC address validation (optional, adjust as needed)
+    $mac_regex = '/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/';
+    if ($lan_mac && !preg_match($mac_regex, $lan_mac)) {
+        $errors[] = 'LAN MAC address format is invalid.';
+    }
+    if ($wlan_mac && !preg_match($mac_regex, $wlan_mac)) {
+        $errors[] = 'WLAN MAC address format is invalid.';
+    }
 
     if (!$errors) {
-        // Log changes for each field
-        $fields = ['asset_tag','name','category_id','vendor_id','location_id','status','purchase_date','serial_number','description','assigned_to_employee_id'];
-        foreach ($fields as $field) {
-            $old = $asset[$field] ?? '';
-            $new = $$field;
-            if ($old != $new) {
-                $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
-                $log_stmt->execute([$asset_id, $field, $old, $new, 'edit', $_SESSION['username'] ?? 'system']);
-            }
-        }
         // Determine new status: 'active' (In Use) if assigned, 'inactive' (Available) if not
         $auto_status = !is_null($assigned_to_employee_id) ? 'active' : 'inactive';
-        $stmt = $pdo->prepare('UPDATE assets SET asset_tag=?, name=?, category_id=?, vendor_id=?, location_id=?, status=?, purchase_date=?, serial_number=?, description=?, assigned_to_employee_id=? WHERE id=?');
-        $stmt->execute([$asset_tag, $name, $category_id, $vendor_id, $location_id, $auto_status, $purchase_date, $serial_number, $description, $assigned_to_employee_id, $asset_id]);
+        $stmt = $pdo->prepare('UPDATE assets SET asset_tag=?, category_id=?, vendor_id=?, location_id=?, status=?, serial_number=?, lan_mac=?, wlan_mac=?, assigned_to_employee_id=? WHERE id=?');
+        $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $serial_number, $lan_mac, $wlan_mac, $assigned_to_employee_id, $asset_id]);
+
         // Record assignment change if changed and not null
         $current = $asset['assigned_to_employee_id'] ?? null;
         if ($assigned_to_employee_id != $current) {
@@ -83,9 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update the asset's current assignment and status
             $update_asset_stmt = $pdo->prepare('UPDATE assets SET assigned_to_employee_id = ?, status = ? WHERE id = ?');
             $update_asset_stmt->execute([$assigned_to_employee_id, $auto_status, $asset_id]);
-            // Log assignment
-            $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
-            $log_stmt->execute([$asset_id, 'assigned_to_employee_id', $current, $assigned_to_employee_id, 'assign', $_SESSION['username'] ?? 'system']);
         }
         header('Location: assets.php?updated=1');
         exit;
@@ -132,10 +126,6 @@ include 'includes/header.php';
             <input type="text" name="asset_tag" class="form-control" value="<?php echo htmlspecialchars($asset_tag); ?>" required>
         </div>
         <div class="form-group">
-            <label>Asset Name</label>
-            <input type="text" name="name" class="form-control" value="<?php echo htmlspecialchars($name); ?>" required>
-        </div>
-        <div class="form-group">
             <label>Category</label>
             <select name="category_id" class="form-control" required>
                 <option value="">Select Category</option>
@@ -174,11 +164,15 @@ include 'includes/header.php';
 
         <div class="form-group">
             <label>Serial Number</label>
-            <input type="text" name="serial_number" class="form-control" value="<?php echo htmlspecialchars($serial_number); ?>">
+            <input type="text" name="serial_number" class="form-control" value="<?php echo htmlspecialchars($serial_number); ?>" required>
         </div>
         <div class="form-group">
-            <label>Notes or Remarks</label>
-            <textarea name="description" class="form-control"><?php echo htmlspecialchars($description); ?></textarea>
+            <label>LAN MAC Address</label>
+            <input type="text" name="lan_mac" class="form-control" value="<?php echo htmlspecialchars($lan_mac); ?>" placeholder="00:00:00:00:00:00">
+        </div>
+        <div class="form-group">
+            <label>WLAN MAC Address</label>
+            <input type="text" name="wlan_mac" class="form-control" value="<?php echo htmlspecialchars($wlan_mac); ?>" placeholder="00:00:00:00:00:00">
         </div>
         <button type="submit" class="btn btn-success">Update Asset</button>
         <a href="assets.php" class="btn btn-secondary ml-2">Cancel</a>

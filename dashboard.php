@@ -53,17 +53,8 @@ try {
     ");
     $recent_assets = $stmt->fetchAll();
     
-    // Assets with upcoming warranty expiry (next 30 days)
-    $stmt = $pdo->query("
-        SELECT a.*, c.name as category_name, v.name as vendor_name
-        FROM assets a 
-        LEFT JOIN categories c ON a.category_id = c.id
-        LEFT JOIN vendors v ON a.vendor_id = v.id
-        WHERE a.warranty_expiry BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
-        AND a.status = 'active'
-        ORDER BY a.warranty_expiry ASC
-    ");
-    $expiring_warranties = $stmt->fetchAll();
+    // (Warranty expiry section removed: column no longer exists)
+    $expiring_warranties = [];
     
 } catch (Exception $e) {
     $_SESSION['error_message'] = 'Error loading dashboard data: ' . $e->getMessage();
@@ -90,11 +81,11 @@ try {
         <div class="stat-label">Active Assets</div>
     </div>
         <div class="stat-card">
-            <div class="stat-number"><?php echo number_format($stats['in_use_assets']); ?></div>
+            <div class="stat-number"><?php echo number_format(isset($stats['in_use_assets']) && $stats['in_use_assets'] !== null ? $stats['in_use_assets'] : 0); ?></div>
             <div class="stat-label">In Use</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number"><?php echo number_format($stats['in_repair_assets']); ?></div>
+            <div class="stat-number"><?php echo number_format(isset($stats['in_repair_assets']) && $stats['in_repair_assets'] !== null ? $stats['in_repair_assets'] : 0); ?></div>
             <div class="stat-label">In Repair</div>
         </div>
 </div>

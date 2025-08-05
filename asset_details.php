@@ -29,13 +29,21 @@ include 'includes/header.php';
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Asset Details</h2>
-        <a href="assets.php" class="btn btn-secondary">&larr; Back to Assets</a>
+        <div>
+            <a href="assets.php" class="btn btn-secondary">&larr; Back to Assets</a>
+            <?php if (hasRole('manager')): ?>
+                <a href="asset_edit.php?id=<?php echo $asset_id; ?>" class="btn btn-warning ml-2">Edit</a>
+                <?php if (!empty($asset['assigned_to_employee_id'])): ?>
+                    <a href="asset_return.php?id=<?php echo $asset_id; ?>" class="btn btn-danger ml-2" onclick="return confirm('Mark this asset as returned?');">Return</a>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="row">
         <div class="col-md-7">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Asset: <?php echo htmlspecialchars($asset['name']); ?></h4>
+        <h4 class="mb-0">Asset: <?php echo htmlspecialchars($asset['asset_tag']); ?></h4>
                 </div>
                 <div class="card-body">
                     <div class="row mb-2">
@@ -76,8 +84,14 @@ include 'includes/header.php';
                         <div class="col-7"><?php echo htmlspecialchars($asset['serial_number']); ?></div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-5 font-weight-bold">Notes / Remarks:</div>
-                        <div class="col-7"><?php echo nl2br(htmlspecialchars($asset['description'])); ?></div>
+                        <div class="col-5 font-weight-bold">LAN MAC Address:</div>
+                        <div class="col-7"><?php echo htmlspecialchars($asset['lan_mac']); ?></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 font-weight-bold">WLAN MAC Address:</div>
+                        <div class="col-7"><?php echo htmlspecialchars($asset['wlan_mac']); ?></div>
+                    </div>
+                    <!-- Notes / Remarks field removed -->
                     </div>
                 </div>
             </div>

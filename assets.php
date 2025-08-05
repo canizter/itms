@@ -18,7 +18,8 @@ $location_filter = $_GET['location'] ?? '';
 // Sorting parameters
 $sort = $_GET['sort'] ?? 'created_at';
 $order = $_GET['order'] ?? 'DESC';
-$allowed_sorts = ['asset_tag', 'name', 'category_name', 'vendor_name', 'location_name', 'status', 'created_at'];
+// Remove 'name' from allowed_sorts
+$allowed_sorts = ['asset_tag', 'category_name', 'vendor_name', 'location_name', 'status', 'created_at'];
 if (!in_array($sort, $allowed_sorts)) {
     $sort = 'created_at';
 }
@@ -32,9 +33,9 @@ try {
     $params = [];
     
     if (!empty($search)) {
-        $where_conditions[] = "(a.asset_tag LIKE ? OR a.name LIKE ? OR a.description LIKE ? OR a.serial_number LIKE ?)"; // description = notes or remarks
+        $where_conditions[] = "(a.asset_tag LIKE ? OR a.serial_number LIKE ?)";
         $search_param = "%{$search}%";
-        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param]);
+        $params = array_merge($params, [$search_param, $search_param]);
     }
     
     if (!empty($category_filter)) {
@@ -51,8 +52,12 @@ try {
         $where_conditions[] = "a.vendor_id = ?";
         $params[] = $vendor_filter;
     }
+    if (!empty($location_filter)) {
+        $where_conditions[] = "a.location_id = ?";
+        $params[] = $location_filter;
+    }
     $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
-    
+
     // Get total count
     $count_sql = "
         SELECT COUNT(*) as total 
@@ -66,10 +71,11 @@ try {
     $stmt->execute($params);
     $total_records = $stmt->fetch()['total'];
     $total_pages = ceil($total_records / $limit);
-    
+
     // Get assets with assigned employee info
     $sql = "
-        SELECT a.*, c.name as category_name, v.name as vendor_name, l.name as location_name,
+        SELECT a.id, a.asset_tag, a.serial_number, a.lan_mac, a.wlan_mac, a.category_id, a.vendor_id, a.location_id, a.status, a.assigned_to_employee_id,
+               c.name as category_name, v.name as vendor_name, l.name as location_name,
                e.employee_id as assigned_employee_id, e.name as assigned_employee_name
         FROM assets a 
         LEFT JOIN categories c ON a.category_id = c.id
@@ -77,18 +83,19 @@ try {
         LEFT JOIN locations l ON a.location_id = l.id
         LEFT JOIN employees e ON a.assigned_to_employee_id = e.id
         {$where_clause}
-        ORDER BY {$sort} {$order}
+        ORDER BY 
+        " . ($sort === 'created_at' ? 'a.created_at' : $sort) . " {$order}
         LIMIT {$limit} OFFSET {$offset}
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $assets = $stmt->fetchAll();
-    
+
     // Get filter options
     $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name")->fetchAll();
     $vendors = $pdo->query("SELECT id, name FROM vendors ORDER BY name")->fetchAll();
     $locations = $pdo->query("SELECT id, name FROM locations ORDER BY name")->fetchAll();
-    
+
 } catch (Exception $e) {
     $_SESSION['error_message'] = 'Error loading assets: ' . $e->getMessage();
     $assets = [];
@@ -195,11 +202,13 @@ try {
                                     <?php echo $order === 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </th>
-                            <th>Serial Number</th>
+                            <th>Status</th>
                             <th>Category</th>
                             <th>Vendor</th>
+                            <th>Serial Number</th>
+                            <th>LAN MAC Address</th>
+                            <th>WLAN MAC Address</th>
                             <th>Location</th>
-                            <th>Status</th>
                             <th>Assigned Employee ID</th>
                             <th>Assigned Employee Name</th>
                             <th>Actions</th>
@@ -213,10 +222,6 @@ try {
                                         <strong><?php echo htmlspecialchars($asset['asset_tag']); ?></strong>
                                     </a>
                                 </td>
-                                <td><?php echo htmlspecialchars($asset['serial_number'] ?? ''); ?></td>
-                                <td><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($asset['location_name'] ?? 'N/A'); ?></td>
                                 <td>
                                     <span class="badge badge-<?php 
                                         echo $asset['status'] === 'In Use' ? 'success' : 
@@ -239,6 +244,12 @@ try {
                                     ?>
                                     </span>
                                 </td>
+                                <td><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($asset['serial_number'] ?? ''); ?></td>
+                                <td><?php echo htmlspecialchars($asset['lan_mac'] ?? ''); ?></td>
+                                <td><?php echo htmlspecialchars($asset['wlan_mac'] ?? ''); ?></td>
+                                <td><?php echo htmlspecialchars($asset['location_name'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($asset['assigned_employee_id'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($asset['assigned_employee_name'] ?? ''); ?></td>
                                 <td>

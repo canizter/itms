@@ -117,9 +117,7 @@ if ($_POST) {
             </form>
             
             <div class="text-center mt-3">
-                <small class="text-muted">
-                    Default login: <strong>admin</strong> / <strong>admin123</strong>
-                </small>
+                <!-- Default login text removed -->
             </div>
         </div>
     </div>
@@ -128,36 +126,6 @@ if ($_POST) {
     <script>
         // Focus on username field
         document.getElementById('username').focus();
-        
-        // Show/hide password functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const passwordField = document.getElementById('password');
-            const showPasswordBtn = document.createElement('button');
-            showPasswordBtn.type = 'button';
-            showPasswordBtn.innerHTML = '👁️';
-            showPasswordBtn.style.position = 'absolute';
-            showPasswordBtn.style.right = '10px';
-            showPasswordBtn.style.top = '50%';
-            showPasswordBtn.style.transform = 'translateY(-50%)';
-            showPasswordBtn.style.border = 'none';
-            showPasswordBtn.style.background = 'none';
-            showPasswordBtn.style.cursor = 'pointer';
-            showPasswordBtn.style.fontSize = '16px';
-            
-            passwordField.parentNode.style.position = 'relative';
-            passwordField.style.paddingRight = '40px';
-            passwordField.parentNode.appendChild(showPasswordBtn);
-            
-            showPasswordBtn.addEventListener('click', function() {
-                if (passwordField.type === 'password') {
-                    passwordField.type = 'text';
-                    showPasswordBtn.innerHTML = '🙈';
-                } else {
-                    passwordField.type = 'password';
-                    showPasswordBtn.innerHTML = '👁️';
-                }
-            });
-        });
     </script>
 </body>
 </html>
