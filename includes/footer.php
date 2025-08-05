@@ -11,14 +11,12 @@
         </div>
     </footer>
 
-    <!-- JavaScript -->
     <script src="assets/js/app.js"></script>
-    
+    <script src="assets/js/app.js"></script>
     <!-- Additional page-specific JavaScript can be added here -->
     <?php if (isset($additional_js)): ?>
         <?php echo $additional_js; ?>
     <?php endif; ?>
-    
     <script>
         // Initialize page-specific functionality
         document.addEventListener('DOMContentLoaded', function() {

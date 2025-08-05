@@ -1,3 +1,12 @@
+-- Models table (each model belongs to a single vendor)
+CREATE TABLE IF NOT EXISTS models (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    vendor_id INT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+);
 -- IT Management System Database
 -- Created: August 3, 2025
 

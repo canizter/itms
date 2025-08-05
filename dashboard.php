@@ -65,140 +65,143 @@ try {
 }
 ?>
 
-<div class="page-header">
-    <h1 class="page-title">Dashboard</h1>
-    <p class="page-subtitle">IT Management System Overview</p>
-</div>
 
-<!-- Dashboard Statistics -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-number"><?php echo number_format($stats['total_assets']); ?></div>
-        <div class="stat-label">Total Assets</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-1">Dashboard</h1>
+    <p class="text-gray-500 text-base">IT Management System Overview</p>
+  </div>
+  <!-- Dashboard Statistics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+      <div class="text-2xl font-bold text-blue-600"><?php echo number_format($stats['total_assets']); ?></div>
+      <div class="text-gray-500 mt-1">Total Assets</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-number"><?php echo number_format($stats['active_assets']); ?></div>
-        <div class="stat-label">Active Assets</div>
+    <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+      <div class="text-2xl font-bold text-green-600"><?php echo number_format($stats['active_assets']); ?></div>
+      <div class="text-gray-500 mt-1">Active Assets</div>
     </div>
-        <div class="stat-card">
-            <div class="stat-number"><?php echo number_format(isset($stats['in_use_assets']) && $stats['in_use_assets'] !== null ? $stats['in_use_assets'] : 0); ?></div>
-            <div class="stat-label">In Use</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number"><?php echo number_format(isset($stats['in_repair_assets']) && $stats['in_repair_assets'] !== null ? $stats['in_repair_assets'] : 0); ?></div>
-            <div class="stat-label">In Repair</div>
-        </div>
-</div>
-    <!-- Removed In Maintenance, Categories, Vendors cards; replaced with In Repair and In Use -->
-
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+      <div class="text-2xl font-bold text-yellow-600"><?php echo number_format(isset($stats['in_use_assets']) && $stats['in_use_assets'] !== null ? $stats['in_use_assets'] : 0); ?></div>
+      <div class="text-gray-500 mt-1">In Use</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+      <div class="text-2xl font-bold text-red-600"><?php echo number_format(isset($stats['in_repair_assets']) && $stats['in_repair_assets'] !== null ? $stats['in_repair_assets'] : 0); ?></div>
+      <div class="text-gray-500 mt-1">In Repair</div>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
     <!-- Recent Assets -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Recent Assets</h3>
-            <a href="assets.php" class="btn btn-primary btn-sm">View All</a>
-        </div>
-        <div class="card-body">
-            <?php if (empty($recent_assets)): ?>
-                <p class="text-muted text-center">No assets found.</p>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Asset Tag</th>
-                                <th>Category</th>
-                                <th>Vendor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($recent_assets as $asset): ?>
-                                <tr>
-                                    <td>
-                                        <a href="asset_details.php?id=<?php echo $asset['id']; ?>" class="text-primary">
-                                            <?php echo htmlspecialchars($asset['asset_tag']); ?>
-                                        </a>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
-                                    <td><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
+    <div class="md:col-span-2 bg-white rounded-lg shadow">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h3 class="text-lg font-semibold text-gray-900">Recent Assets</h3>
+        <a href="assets.php" class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium transition">View All</a>
+      </div>
+      <div class="p-6">
+        <?php if (empty($recent_assets)): ?>
+          <p class="text-gray-400 text-center">No assets found.</p>
+        <?php else: ?>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <?php foreach ($recent_assets as $asset): ?>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <a href="asset_details.php?id=<?php echo $asset['id']; ?>" class="text-blue-600 hover:underline">
+                        <?php echo htmlspecialchars($asset['asset_tag']); ?>
+                      </a>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
-
     <!-- Assets by Category -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Assets by Category</h3>
-        </div>
-        <div class="card-body">
-            <?php if (empty($categories_data)): ?>
-                <p class="text-muted text-center">No data available.</p>
-            <?php else: ?>
-                <div style="space-y: 1rem;">
-                    <?php foreach ($categories_data as $category): ?>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #e9ecef;">
-                            <span><?php echo htmlspecialchars($category['name']); ?></span>
-                            <span class="badge badge-primary"><?php echo $category['count']; ?></span>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b">
+        <h3 class="text-lg font-semibold text-gray-900">Assets by Category</h3>
+      </div>
+      <div class="p-6">
+        <?php if (empty($categories_data)): ?>
+          <p class="text-gray-400 text-center">No data available.</p>
+        <?php else: ?>
+          <div class="space-y-3">
+            <?php foreach ($categories_data as $category): ?>
+              <div class="flex justify-between items-center py-2 border-b last:border-b-0">
+                <span class="text-gray-700"><?php echo htmlspecialchars($category['name']); ?></span>
+                <span class="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold"><?php echo $category['count']; ?></span>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
-</div>
+  </div>
+
 
 <!-- Warranty Expiry Alerts -->
 <?php if (!empty($expiring_warranties)): ?>
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">⚠️ Warranty Expiring Soon (Next 30 Days)</h3>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+  <div class="bg-white rounded-lg shadow mb-8">
+    <div class="px-6 py-4 border-b">
+      <h3 class="text-lg font-semibold text-yellow-700 flex items-center gap-2">
+        <span>⚠️</span> Warranty Expiring Soon (Next 30 Days)
+      </h3>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Asset Tag</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Vendor</th>
-                        <th>Warranty Expiry</th>
-                        <th>Days Left</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($expiring_warranties as $asset): ?>
-                        <?php 
-                            $expiry_date = new DateTime($asset['warranty_expiry']);
-                            $today = new DateTime();
-                            $days_left = $today->diff($expiry_date)->days;
-                        ?>
-                        <tr>
-                            <td>
-                                <a href="asset_details.php?id=<?php echo $asset['id']; ?>" class="text-primary">
-                                    <?php echo htmlspecialchars($asset['asset_tag']); ?>
-                                </a>
-                            </td>
-                            <td><?php echo htmlspecialchars($asset['name']); ?></td>
-                            <td><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
-                            <td><?php echo formatDate($asset['warranty_expiry']); ?></td>
-                            <td>
-                                <span class="badge badge-<?php echo $days_left <= 7 ? 'danger' : 'warning'; ?>">
-                                    <?php echo $days_left; ?> days
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+    <div class="p-6">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-yellow-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warranty Expiry</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Left</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <?php foreach ($expiring_warranties as $asset): ?>
+              <?php 
+                $expiry_date = new DateTime($asset['warranty_expiry']);
+                $today = new DateTime();
+                $days_left = $today->diff($expiry_date)->days;
+              ?>
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <a href="asset_details.php?id=<?php echo $asset['id']; ?>" class="text-blue-600 hover:underline">
+                    <?php echo htmlspecialchars($asset['asset_tag']); ?>
+                  </a>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['name']); ?></td>
+                <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
+                <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
+                <td class="px-6 py-4 whitespace-nowrap"><?php echo formatDate($asset['warranty_expiry']); ?></td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold <?php echo $days_left <= 7 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'; ?>">
+                    <?php echo $days_left; ?> days
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 </div>
 <?php endif; ?>
 

@@ -9,6 +9,9 @@ checkSessionTimeout();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title ?? 'Dashboard'; ?> - <?php echo APP_NAME; ?></title>
+    <!-- Bootstrap 5.3 CSS -->
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
     <meta name="description" content="IT Management System">
@@ -62,6 +65,11 @@ checkSessionTimeout();
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="models.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'models.php') ? 'active' : ''; ?>">
+                        Models
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="locations.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'locations.php') ? 'active' : ''; ?>">
                         Locations
                     </a>
@@ -88,7 +96,7 @@ checkSessionTimeout();
     </nav>
 
     <!-- Main Content Container -->
-    <div class="container"><?php
+    <div class="container-fluid px-0"><?php
 // Function to show success/error messages
 function showMessage($type, $message) {
     if (!empty($message)) {

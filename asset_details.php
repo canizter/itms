@@ -26,58 +26,107 @@ if (!$asset) {
 }
 include 'includes/header.php';
 ?>
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Asset Details</h2>
-        <div>
-            <a href="assets.php" class="btn btn-secondary">&larr; Back to Assets</a>
-            <?php if (hasRole('manager')): ?>
-                <a href="asset_edit.php?id=<?php echo $asset_id; ?>" class="btn btn-warning ml-2">Edit</a>
-                <?php if (!empty($asset['assigned_to_employee_id'])): ?>
-                    <a href="asset_return.php?id=<?php echo $asset_id; ?>" class="btn btn-danger ml-2" onclick="return confirm('Mark this asset as returned?');">Return</a>
-                <?php endif; ?>
-            <?php endif; ?>
-        </div>
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+    <h2 class="text-2xl font-bold tracking-tight text-gray-900">Asset Details</h2>
+    <div class="flex gap-2">
+      <a href="assets.php" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-semibold transition">&larr; Back to Assets</a>
+      <?php if (hasRole('manager')): ?>
+        <a href="asset_edit.php?id=<?php echo $asset_id; ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 font-semibold transition">Edit</a>
+        <?php if (!empty($asset['assigned_to_employee_id'])): ?>
+          <a href="asset_return.php?id=<?php echo $asset_id; ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200 font-semibold transition" onclick="return confirm('Mark this asset as returned?');">Return</a>
+        <?php endif; ?>
+      <?php endif; ?>
     </div>
-    <div class="row">
-        <div class="col-md-7">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">Asset: <?php echo htmlspecialchars($asset['asset_tag']); ?></h4>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-2">
-                        <div class="col-5 font-weight-bold">Asset Tag:</div>
-                        <div class="col-7"><?php echo htmlspecialchars($asset['asset_tag']); ?></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-5 font-weight-bold">Category:</div>
-                        <div class="col-7"><?php echo htmlspecialchars($asset['category_name']); ?></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-5 font-weight-bold">Vendor:</div>
-                        <div class="col-7"><?php echo htmlspecialchars($asset['vendor_name']); ?></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-5 font-weight-bold">Location:</div>
-                        <div class="col-7"><?php echo htmlspecialchars($asset['location_name']); ?></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-5 font-weight-bold">Status:</div>
-                        <div class="col-7">
-                            <?php 
-                                $status = strtolower($asset['status']);
-                                $badge = 'secondary';
-                                $displayStatus = '';
-                                if ($status === 'active') { $badge = 'success'; $displayStatus = 'In Use'; }
-                                elseif ($status === 'inactive') { $badge = 'info'; $displayStatus = 'Available'; }
-                                elseif ($status === 'maintenance') { $badge = 'warning'; $displayStatus = 'In Repair'; }
-                                elseif ($status === 'disposed') { $badge = 'dark'; $displayStatus = 'Retired'; }
-                                else { $displayStatus = ucfirst($asset['status']); }
-                            ?>
-                            <span class="badge badge-<?php echo $badge; ?> text-uppercase"><?php echo htmlspecialchars($displayStatus); ?></span>
-                        </div>
-                    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b bg-blue-600 rounded-t-lg">
+          <h4 class="text-lg font-semibold text-white">Asset: <?php echo htmlspecialchars($asset['asset_tag']); ?></h4>
+        </div>
+        <div class="px-6 py-4">
+          <dl class="divide-y divide-gray-100">
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">Asset Tag:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['asset_tag']); ?></dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">Category:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['category_name']); ?></dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">Vendor:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['vendor_name']); ?></dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">Location:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['location_name']); ?></dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">Status:</dt>
+              <dd>
+                <?php 
+                  $status = strtolower($asset['status']);
+                  $displayStatus = '';
+                  $badge_class = 'bg-gray-100 text-gray-800';
+                  if ($status === 'active') { $badge_class = 'bg-green-100 text-green-800'; $displayStatus = 'In Use'; }
+                  elseif ($status === 'inactive') { $badge_class = 'bg-blue-100 text-blue-800'; $displayStatus = 'Available'; }
+                  elseif ($status === 'maintenance') { $badge_class = 'bg-yellow-100 text-yellow-800'; $displayStatus = 'In Repair'; }
+                  elseif ($status === 'disposed') { $badge_class = 'bg-red-100 text-red-800'; $displayStatus = 'Retired'; }
+                  else { $displayStatus = ucfirst($asset['status']); }
+                ?>
+                <span class="inline-block px-2 py-1 rounded text-xs font-semibold <?php echo $badge_class; ?>">
+                  <?php echo htmlspecialchars($displayStatus); ?>
+                </span>
+              </dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">Serial Number:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['serial_number']); ?></dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">LAN MAC Address:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['lan_mac']); ?></dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">WLAN MAC Address:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['wlan_mac']); ?></dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b bg-blue-100 rounded-t-lg">
+          <h5 class="text-base font-semibold text-blue-800">Assignment</h5>
+        </div>
+        <div class="px-6 py-4">
+          <?php if (!empty($asset['assigned_to_employee_id']) && (!empty($asset['assigned_employee_id']) || !empty($asset['assigned_employee_name']))): ?>
+            <div class="mb-2">
+              <span class="font-medium text-gray-700">Assigned To:</span><br>
+              <span class="text-lg font-semibold text-gray-900">
+                <?php
+                  $emp_id = $asset['assigned_employee_id'] ?? '';
+                  $emp_name = $asset['assigned_employee_name'] ?? '';
+                  echo htmlspecialchars(trim($emp_id . ' - ' . $emp_name, ' -'));
+                ?>
+              </span>
+            </div>
+            <div class="mb-3">
+              <a href="asset_assignments.php?asset_id=<?php echo $asset_id; ?>" class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition">View Assignment History</a>
+            </div>
+          <?php else: ?>
+            <div class="mb-2 text-gray-500">Currently <strong>Unassigned</strong></div>
+            <a href="asset_assignments.php?asset_id=<?php echo $asset_id; ?>" class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition">View Assignment History</a>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<?php include 'includes/footer.php'; ?>
 
                     <div class="row mb-2">
                         <div class="col-5 font-weight-bold">Serial Number:</div>
