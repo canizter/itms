@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Assets';
+$page_title = 'Assets'; // ITMS v1.2
 require_once 'config/config.php';
 require_once 'includes/header.php';
 
@@ -170,8 +170,9 @@ try {
         <div>
             <?php if (hasRole('manager')): ?>
                 <a href="asset_add.php" class="btn btn-success">Add New Asset</a>
+                <a href="import_assets.php" class="btn btn-info">Import</a>
             <?php endif; ?>
-            <a href="export_assets.php" class="btn btn-secondary">Export CSV</a>
+            <a href="export_assets.php" class="btn btn-secondary">Export</a>
         </div>
     </div>
     <div class="card-body">

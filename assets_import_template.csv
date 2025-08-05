@@ -1,0 +1,4 @@
+Asset Tag,Category,Vendor,Location,Status,Serial Number,Note / Remarks,Assigned Employee ID
+ASSET-001,Laptop,Dell,Main Office,In Use,SN-12345,For John Doe,EMP001
+ASSET-002,Monitor,Samsung,Main Office,Available,SN-54321,Spare monitor,
+ASSET-003,Printer,HP,Branch Office,In Repair,SN-99999,Needs maintenance,EMP002

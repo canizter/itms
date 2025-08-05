@@ -215,8 +215,10 @@ For technical support or questions:
 - Ensure all requirements are met
 - Verify database structure is correct
 
+
 ## Version History
 
+**v1.2.0** - Asset import status fix, asset_tag uniqueness enforced, and other improvements
 **v1.0.0** - Initial Release
 - Core asset management functionality
 - User authentication and roles
