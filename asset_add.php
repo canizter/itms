@@ -33,31 +33,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$category_id) $errors[] = 'Category is required.';
     if (!$vendor_id) $errors[] = 'Vendor is required.';
     if (!$location_id) $errors[] = 'Location is required.';
+    if ($serial_number === '') $errors[] = 'Serial Number is required.';
+    // Check for duplicate serial number
+    if ($serial_number !== '') {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM assets WHERE serial_number = ?');
+        $stmt->execute([$serial_number]);
+        if ($stmt->fetchColumn() > 0) {
+            $errors[] = 'Warning: Serial Number already exists. Please use a unique Serial Number.';
+        }
+    }
 
     if (!$errors) {
         // Set status automatically: 'active' (In Use) if assigned, 'inactive' (Available) if not
         $auto_status = !is_null($assigned_to_employee_id) ? 'active' : 'inactive';
-    $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, location_id, status, purchase_date, serial_number, description, assigned_to_employee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $purchase_date, $serial_number, $description, $assigned_to_employee_id]);
-        $new_asset_id = $pdo->lastInsertId();
-        // Log asset creation
-        $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
-        $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'location_id'=>$location_id,'status'=>$auto_status,'purchase_date'=>$purchase_date,'serial_number'=>$serial_number,'description'=>$description,'assigned_to_employee_id'=>$assigned_to_employee_id]), 'create', $_SESSION['username'] ?? 'system']);
-        // Insert into asset_assignments history only if assigned
-        if (!is_null($assigned_to_employee_id)) {
-            $assign_stmt = $pdo->prepare('INSERT INTO asset_assignments (asset_id, employee_id, assigned_by, assigned_date, notes) VALUES (?, ?, ?, ?, ?)');
-            $assign_stmt->execute([
-                $new_asset_id,
-                $assigned_to_employee_id,
-                $_SESSION['username'] ?? 'system',
-                date('Y-m-d'),
-                'Initial assignment'
-            ]);
-            // Log assignment
-            $log_stmt->execute([$new_asset_id, 'assigned_to_employee_id', '', $assigned_to_employee_id, 'assign', $_SESSION['username'] ?? 'system']);
+        try {
+            $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, location_id, status, purchase_date, serial_number, description, assigned_to_employee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $purchase_date, $serial_number, $description, $assigned_to_employee_id]);
+            $new_asset_id = $pdo->lastInsertId();
+            // Log asset creation
+            $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
+            $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'location_id'=>$location_id,'status'=>$auto_status,'purchase_date'=>$purchase_date,'serial_number'=>$serial_number,'description'=>$description,'assigned_to_employee_id'=>$assigned_to_employee_id]), 'create', $_SESSION['username'] ?? 'system']);
+            // Insert into asset_assignments history only if assigned
+            if (!is_null($assigned_to_employee_id)) {
+                $assign_stmt = $pdo->prepare('INSERT INTO asset_assignments (asset_id, employee_id, assigned_by, assigned_date, notes) VALUES (?, ?, ?, ?, ?)');
+                $assign_stmt->execute([
+                    $new_asset_id,
+                    $assigned_to_employee_id,
+                    $_SESSION['username'] ?? 'system',
+                    date('Y-m-d'),
+                    'Initial assignment'
+                ]);
+                // Log assignment
+                $log_stmt->execute([$new_asset_id, 'assigned_to_employee_id', '', $assigned_to_employee_id, 'assign', $_SESSION['username'] ?? 'system']);
+            }
+            header('Location: assets.php?added=1');
+            exit;
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000 && strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), 'asset_tag') !== false) {
+                $errors[] = 'Warning: Asset Tag already exists. Please use a unique Asset Tag.';
+            } else {
+                $errors[] = 'Database error: ' . $e->getMessage();
+            }
         }
-        header('Location: assets.php?added=1');
-        exit;
     }
 }
 include 'includes/header.php';
@@ -65,7 +82,13 @@ include 'includes/header.php';
 <div class="container mt-4">
     <h2>Add New Asset</h2>
     <?php foreach ($errors as $error): ?>
-        <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+        <?php if ($error === 'Warning: Asset Tag already exists. Please use a unique Asset Tag.'): ?>
+            <div class="alert alert-danger"><strong style="color: #b30000; font-weight: bold;">Warning: Asset Tag already exists. Please use a unique Asset Tag.</strong></div>
+        <?php elseif ($error === 'Warning: Serial Number already exists. Please use a unique Serial Number.'): ?>
+            <div class="alert alert-danger"><strong style="color: #b30000; font-weight: bold;">Warning: Serial Number already exists. Please use a unique Serial Number.</strong></div>
+        <?php else: ?>
+            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
     <?php endforeach; ?>
     <form method="post">
         <div class="form-group">

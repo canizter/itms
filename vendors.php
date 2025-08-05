@@ -17,6 +17,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '') {
         $errors[] = 'Vendor name is required.';
     }
+    // Check uniqueness
+    if (empty($errors)) {
+        if (isset($_POST['id']) && $_POST['id']) {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM vendors WHERE name = ? AND id != ?');
+            $stmt->execute([$name, $_POST['id']]);
+            if ($stmt->fetchColumn() > 0) {
+                $errors[] = 'Vendor name already exist';
+            }
+        } else {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM vendors WHERE name = ?');
+            $stmt->execute([$name]);
+            if ($stmt->fetchColumn() > 0) {
+                $errors[] = 'Vendor name already exist';
+            }
+        }
+    }
     if (empty($errors)) {
         if (isset($_POST['id']) && $_POST['id']) {
             $stmt = $pdo->prepare('UPDATE vendors SET name=? WHERE id=?');
@@ -44,7 +60,7 @@ if (isset($_GET['delete'])) {
         $success = 'Vendor deleted.';
     }
 }
-$rows = $pdo->query('SELECT * FROM vendors ORDER BY id DESC')->fetchAll();
+$rows = $pdo->query('SELECT * FROM vendors ORDER BY name ASC')->fetchAll();
 $rows = $pdo->query('SELECT * FROM vendors ORDER BY id DESC')->fetchAll();
 if ($id) {
     $stmt = $pdo->prepare('SELECT * FROM vendors WHERE id=?');

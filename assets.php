@@ -195,7 +195,7 @@ try {
                                     <?php echo $order === 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </th>
-                            <!-- Name column removed -->
+                            <th>Serial Number</th>
                             <th>Category</th>
                             <th>Vendor</th>
                             <th>Location</th>
@@ -213,7 +213,7 @@ try {
                                         <strong><?php echo htmlspecialchars($asset['asset_tag']); ?></strong>
                                     </a>
                                 </td>
-                                <!-- Asset Name column fully removed -->
+                                <td><?php echo htmlspecialchars($asset['serial_number'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($asset['location_name'] ?? 'N/A'); ?></td>

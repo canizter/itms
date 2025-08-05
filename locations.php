@@ -16,6 +16,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '') {
         $errors[] = 'Location name is required.';
     }
+    // Check uniqueness
+    if (empty($errors)) {
+        if (isset($_POST['id']) && $_POST['id']) {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM locations WHERE name = ? AND id != ?');
+            $stmt->execute([$name, $_POST['id']]);
+            if ($stmt->fetchColumn() > 0) {
+                $errors[] = 'Location already exist';
+            }
+        } else {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM locations WHERE name = ?');
+            $stmt->execute([$name]);
+            if ($stmt->fetchColumn() > 0) {
+                $errors[] = 'Location already exist';
+            }
+        }
+    }
     if (empty($errors)) {
         if (isset($_POST['id']) && $_POST['id']) {
             $stmt = $pdo->prepare('UPDATE locations SET name=? WHERE id=?');
@@ -49,14 +65,16 @@ if ($id) {
     $row = $stmt->fetch();
     if ($row) $name = $row['name'];
 }
-$rows = $pdo->query('SELECT * FROM locations ORDER BY id DESC')->fetchAll();
+$rows = $pdo->query('SELECT * FROM locations ORDER BY name ASC')->fetchAll();
 ?>
+
 <div class="container mt-4">
-    <h2 class="mb-4">Locations</h2>
     <?php if ($success): ?><div class="alert alert-success"><?=htmlspecialchars($success)?></div><?php endif; ?>
     <?php foreach ($errors as $e): ?><div class="alert alert-danger"><?=htmlspecialchars($e)?></div><?php endforeach; ?>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <button class="btn btn-primary" data-toggle="modal" data-target="#addLocationModal">+ Add Location</button>
+        <h2 class="mb-0">Locations</h2>
+        <button class="btn btn-primary ml-auto" data-toggle="modal" data-target="#addLocationModal">+ Add Location</button>
     </div>
 
     <!-- Add Location Modal -->

@@ -57,7 +57,12 @@ if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK
                 }
                 $imported++;
             } catch (PDOException $e) {
-                $skipped++;
+                // If duplicate employee_id, show user-friendly warning
+                if ($e->getCode() == 23000 && strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), 'employee_id') !== false) {
+                    $errors[] = 'Employee already exist';
+                } else {
+                    $skipped++;
+                }
             }
         }
         fclose($handle);
@@ -113,7 +118,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $employee_id = $name = $department = $email = $position = '';
             $edit_id = null;
         } catch (PDOException $e) {
-            $errors[] = 'Database error: ' . $e->getMessage();
+            // Check for duplicate entry error (employee_id must be unique)
+            if ($e->getCode() == 23000 && strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), 'employee_id') !== false) {
+                $errors[] = 'Employee already exist';
+            } else {
+                $errors[] = 'Database error: ' . $e->getMessage();
+            }
         }
     }
 }
