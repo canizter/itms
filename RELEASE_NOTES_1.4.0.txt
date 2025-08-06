@@ -20,3 +20,7 @@ For installation and upgrade instructions, see the README.md in this repository.
 
 © 2025 IT Management System
 Built for efficient IT asset tracking and management.
+
+---
+
+*This project is programmed using GitHub Copilot AI assistance.*
