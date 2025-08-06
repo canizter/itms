@@ -218,6 +218,16 @@ For technical support or questions:
 
 ## Version History
 
+**v1.4.1** - August 2025
+- Asset import CSV: Model column now required and validated per vendor
+- Improved error display and warnings on asset import page
+- Font and style tweaks for import instructions
+- Import success now redirects to asset list
+- Bugfix: Deprecated warning for strtolower() on null header
+- Bugfix: Proper error line breaks in import errors
+- Database: Ensure model_id column is present in assets table
+- Version bump to 1.4.1
+
 
 **v1.4.0** - August 2025
 - Model selection (dependent on vendor) added to Add/Edit Asset

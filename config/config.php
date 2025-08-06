@@ -9,7 +9,7 @@ define('DB_NAME', 'itms_db');
 
 // Application settings
 define('APP_NAME', 'IT Management System');
-define('APP_VERSION', '1.4.0');
+define('APP_VERSION', '1.4.1');
 define('BASE_URL', 'http://localhost/itms/');
 
 // Session settings
