@@ -218,6 +218,12 @@ For technical support or questions:
 
 ## Version History
 
+**v1.4.3** - August 2025
+- Added migration script for model_id column in assets table (db/migrations/002_add_model_id_to_assets.sql)
+- Database schema versioning best practices introduced
+- Documentation and workflow improvements for production schema updates
+- Version bump to 1.4.3
+
 **v1.4.1** - August 2025
 - Asset import CSV: Model column now required and validated per vendor
 - Improved error display and warnings on asset import page

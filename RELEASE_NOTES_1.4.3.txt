@@ -1,0 +1,23 @@
+# ITMS v1.4.3 Release Notes
+
+## What's new in v1.4.3
+
+- Added migration script for model_id column in assets table (db/migrations/002_add_model_id_to_assets.sql)
+- Database schema versioning best practices introduced
+- Documentation and workflow improvements for production schema updates
+- Version bump to 1.4.3
+
+---
+
+**Release Date:** August 6, 2025
+
+For installation and upgrade instructions, see the README.md in this repository.
+
+---
+
+© 2025 IT Management System
+Built for efficient IT asset tracking and management.
+
+---
+
+*This project is programmed using GitHub Copilot AI assistance.*
