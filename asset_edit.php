@@ -5,6 +5,7 @@ if (!isLoggedIn()) {
     header('Location: login.php');
     exit;
 }
+
 $pdo = getDBConnection();
 $asset_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$asset_id) {
@@ -42,6 +43,83 @@ if (!isset($employees)) {
 if (!isset($locations)) {
     $locations = $pdo->query('SELECT id, name FROM locations ORDER BY name')->fetchAll();
 }
+
+// Handle POST (update asset)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $asset_tag = trim($_POST['asset_tag'] ?? '');
+    $category_id = (int)($_POST['category_id'] ?? 0);
+    $vendor_id = (int)($_POST['vendor_id'] ?? 0);
+    $location_id = (int)($_POST['location_id'] ?? 0);
+    $status = $_POST['status'] ?? 'active';
+    $serial_number = trim($_POST['serial_number'] ?? '');
+    $lan_mac = trim($_POST['lan_mac'] ?? '');
+    $wlan_mac = trim($_POST['wlan_mac'] ?? '');
+    $new_assigned_to_employee_id = $_POST['assigned_to_employee_id'] !== '' ? (int)$_POST['assigned_to_employee_id'] : null;
+
+    // Validation
+    if ($asset_tag === '') {
+        $errors[] = 'Asset tag is required.';
+    }
+    if (!$category_id) {
+        $errors[] = 'Category is required.';
+    }
+    if (!$vendor_id) {
+        $errors[] = 'Vendor is required.';
+    }
+    if (!$location_id) {
+        $errors[] = 'Location is required.';
+    }
+    if ($serial_number === '') {
+        $errors[] = 'Serial number is required.';
+    }
+    // Optionally, add more validation as needed
+
+    // Assignment logic: Only allow assignment if asset is not currently assigned or is being returned
+    $current_assigned_to_employee_id = $asset['assigned_to_employee_id'] ?? null;
+    $assignment_changed = $new_assigned_to_employee_id != $current_assigned_to_employee_id;
+
+    if (empty($errors)) {
+        try {
+            $pdo->beginTransaction();
+            // Update asset
+            $update_stmt = $pdo->prepare('UPDATE assets SET asset_tag=?, category_id=?, vendor_id=?, location_id=?, status=?, serial_number=?, lan_mac=?, wlan_mac=?, assigned_to_employee_id=? WHERE id=?');
+            $update_stmt->execute([
+                $asset_tag,
+                $category_id,
+                $vendor_id,
+                $location_id,
+                $status,
+                $serial_number,
+                $lan_mac,
+                $wlan_mac,
+                $new_assigned_to_employee_id,
+                $asset_id
+            ]);
+
+            // If assignment changed, insert into assignment history
+            if ($assignment_changed) {
+                $now = date('Y-m-d');
+                $assign_stmt = $pdo->prepare('INSERT INTO asset_assignments (asset_id, employee_id, assigned_by, assigned_date, notes) VALUES (?, ?, ?, ?, ?)');
+                if ($new_assigned_to_employee_id) {
+                    $assign_stmt->execute([$asset_id, $new_assigned_to_employee_id, $_SESSION['username'] ?? 'system', $now, 'Re-assigned via edit']);
+                }
+                // Optionally, mark previous assignment as returned (if needed)
+                if ($current_assigned_to_employee_id && !$new_assigned_to_employee_id) {
+                    $return_stmt = $pdo->prepare('UPDATE asset_assignments SET returned_at=? WHERE asset_id=? AND employee_id=? AND returned_at IS NULL');
+                    $return_stmt->execute([$now, $asset_id, $current_assigned_to_employee_id]);
+                }
+            }
+
+            $pdo->commit();
+            header('Location: assets.php?msg=updated');
+            exit;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $errors[] = 'Failed to update asset: ' . $e->getMessage();
+        }
+    }
+    // If errors, the form will re-render with $errors and posted values
+}
 ?>
 <?php include 'includes/header.php'; ?>
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -58,25 +136,85 @@ if (!isset($locations)) {
       <label class="block text-sm font-medium text-gray-700 mb-1">Assign to Employee</label>
       <?php if (!empty($asset['assigned_to_employee_id'])): ?>
         <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded mb-2 text-sm">This asset is currently assigned. Please return it before assigning to another employee.</div>
-        <select name="assigned_to_employee_id" class="block w-full border border-gray-300 rounded px-3 py-2 bg-gray-100" disabled>
-          <option value="<?php echo $assigned_to_employee_id; ?>" selected>
-            <?php 
-              foreach ($employees as $emp) {
-                if ($emp['id'] == $assigned_to_employee_id) {
-                  echo htmlspecialchars($emp['employee_id'] . ' - ' . $emp['name']);
-                  break;
-                }
-              }
-            ?>
-          </option>
-        </select>
+        <input type="text" class="block w-full border border-gray-300 rounded px-3 py-2 bg-gray-100" value="<?php 
+          foreach ($employees as $emp) {
+            if ($emp['id'] == $assigned_to_employee_id) {
+              echo htmlspecialchars($emp['employee_id'] . ' - ' . $emp['name']);
+              break;
+            }
+          }
+        ?>" disabled>
+        <input type="hidden" name="assigned_to_employee_id" value="<?php echo htmlspecialchars($assigned_to_employee_id); ?>">
       <?php else: ?>
-        <select name="assigned_to_employee_id" class="block w-full border border-gray-300 rounded px-3 py-2">
-          <option value="">-- Unassigned --</option>
-          <?php foreach ($employees as $emp): ?>
-            <option value="<?php echo $emp['id']; ?>" <?php if ($assigned_to_employee_id == $emp['id']) echo 'selected'; ?>><?php echo htmlspecialchars($emp['employee_id'] . ' - ' . $emp['name']); ?></option>
-          <?php endforeach; ?>
-        </select>
+        <input type="text" id="employeeSearch" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type to search employee..." autocomplete="off">
+        <input type="hidden" name="assigned_to_employee_id" id="assigned_to_employee_id" value="<?php echo htmlspecialchars($assigned_to_employee_id ?? ''); ?>">
+        <div id="employeeSearchResults" class="absolute z-50 bg-white border border-gray-300 rounded shadow mt-1 w-full hidden"></div>
+        <script>
+          const employees = <?php echo json_encode($employees); ?>;
+          const searchInput = document.getElementById('employeeSearch');
+          const resultsDiv = document.getElementById('employeeSearchResults');
+          const hiddenInput = document.getElementById('assigned_to_employee_id');
+          function renderResults(filtered) {
+            if (!filtered.length) {
+              resultsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">No results found</div>';
+              resultsDiv.classList.remove('hidden');
+              return;
+            }
+            resultsDiv.innerHTML = filtered.map(emp =>
+              `<div class='px-4 py-2 hover:bg-blue-100 cursor-pointer' data-id='${emp.id}' data-name='${emp.employee_id} - ${emp.name}'>${emp.employee_id} - ${emp.name}</div>`
+            ).join('');
+            resultsDiv.classList.remove('hidden');
+          }
+          searchInput.addEventListener('input', function() {
+            const val = this.value.trim().toLowerCase();
+            if (!val) {
+              resultsDiv.classList.add('hidden');
+              hiddenInput.value = '';
+              return;
+            }
+            const filtered = employees.filter(emp =>
+              emp.employee_id.toLowerCase().includes(val) || emp.name.toLowerCase().includes(val)
+            );
+            renderResults(filtered);
+          });
+        resultsDiv.addEventListener('mousedown', function(e) {
+            if (e.target && e.target.dataset.id) {
+              searchInput.value = e.target.dataset.name;
+              hiddenInput.value = e.target.dataset.id;
+              resultsDiv.classList.add('hidden');
+              // Auto-set status to 'active' (In Use) when employee is selected
+              var statusSelect = document.querySelector('select[name="status"]');
+              if (statusSelect) {
+                statusSelect.value = 'active';
+              }
+            }
+          });
+        document.addEventListener('mousedown', function(e) {
+            if (!resultsDiv.contains(e.target) && e.target !== searchInput) {
+              resultsDiv.classList.add('hidden');
+            }
+          });
+        // If employee is cleared, set status to 'inactive' (Available)
+        searchInput.addEventListener('input', function() {
+          if (!this.value.trim()) {
+            hiddenInput.value = '';
+            var statusSelect = document.querySelector('select[name="status"]');
+            if (statusSelect) {
+              statusSelect.value = 'inactive';
+            }
+          }
+        });
+          // Pre-fill if editing
+          <?php if (isset($assigned_to_employee_id) && $assigned_to_employee_id): ?>
+          (function() {
+            const emp = employees.find(e => e.id == <?php echo json_encode($assigned_to_employee_id); ?>);
+            if (emp) {
+              searchInput.value = emp.employee_id + ' - ' + emp.name;
+              hiddenInput.value = emp.id;
+            }
+          })();
+          <?php endif; ?>
+        </script>
       <?php endif; ?>
     </div>
     <div>

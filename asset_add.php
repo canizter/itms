@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $vendor_id = $_POST['vendor_id'] ?? '';
     $location_id = $_POST['location_id'] ?? '';
     $status = $_POST['status'] ?? 'active';
-    $assigned_to_employee_id = isset($_POST['assigned_to_employee_id']) && $_POST['assigned_to_employee_id'] !== '' ? $_POST['assigned_to_employee_id'] : null;
+
     $serial_number = trim($_POST['serial_number'] ?? '');
     $lan_mac = trim($_POST['lan_mac'] ?? '');
     $wlan_mac = trim($_POST['wlan_mac'] ?? '');
@@ -54,27 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         // Set status automatically: 'active' (In Use) if assigned, 'inactive' (Available) if not
-        $auto_status = !is_null($assigned_to_employee_id) ? 'active' : 'inactive';
+        $auto_status = 'inactive';
         try {
-            $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, location_id, status, serial_number, lan_mac, wlan_mac, assigned_to_employee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $serial_number, $lan_mac, $wlan_mac, $assigned_to_employee_id]);
+            $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, location_id, status, serial_number, lan_mac, wlan_mac) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $serial_number, $lan_mac, $wlan_mac]);
             $new_asset_id = $pdo->lastInsertId();
             // Log asset creation
             $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
-            $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'location_id'=>$location_id,'status'=>$auto_status,'serial_number'=>$serial_number,'lan_mac'=>$lan_mac,'wlan_mac'=>$wlan_mac,'assigned_to_employee_id'=>$assigned_to_employee_id]), 'create', $_SESSION['username'] ?? 'system']);
-            // Insert into asset_assignments history only if assigned
-            if (!is_null($assigned_to_employee_id)) {
-                $assign_stmt = $pdo->prepare('INSERT INTO asset_assignments (asset_id, employee_id, assigned_by, assigned_date, notes) VALUES (?, ?, ?, ?, ?)');
-                $assign_stmt->execute([
-                    $new_asset_id,
-                    $assigned_to_employee_id,
-                    $_SESSION['username'] ?? 'system',
-                    date('Y-m-d'),
-                    'Initial assignment'
-                ]);
-                // Log assignment
-                $log_stmt->execute([$new_asset_id, 'assigned_to_employee_id', '', $assigned_to_employee_id, 'assign', $_SESSION['username'] ?? 'system']);
-            }
+            $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'location_id'=>$location_id,'status'=>$auto_status,'serial_number'=>$serial_number,'lan_mac'=>$lan_mac,'wlan_mac'=>$wlan_mac]), 'create', $_SESSION['username'] ?? 'system']);
             header('Location: assets.php?added=1');
             exit;
         } catch (PDOException $e) {
@@ -109,17 +96,7 @@ include 'includes/header.php';
     <?php endif; ?>
   <?php endforeach; ?>
   <form method="post" class="bg-white shadow rounded-lg p-6 space-y-5">
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Assign to Employee</label>
-      <select name="assigned_to_employee_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option value="">-- Unassigned --</option>
-        <?php foreach ($employees as $emp): ?>
-          <option value="<?php echo $emp['id']; ?>" <?php if (isset($assigned_to_employee_id) && $assigned_to_employee_id == $emp['id']) echo 'selected'; ?>>
-            <?php echo htmlspecialchars($emp['employee_id'] . ' - ' . $emp['name']); ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
+    <!-- Assign to Employee removed as requested -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Asset Tag</label>
       <input type="text" name="asset_tag" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value="<?php echo htmlspecialchars($asset_tag); ?>" required>

@@ -47,9 +47,6 @@ try {
         fputcsv($output, [
             $row['asset_tag'],
             $row['category_name'],
-<?php
-// ITMS v1.2
-require_once 'config/config.php';
             $row['vendor_name'],
             $row['location_name'],
             $row['status'],

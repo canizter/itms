@@ -167,7 +167,10 @@ $stmt->execute($params);
 $totalEmployees = $stmt->fetchColumn();
 $totalPages = max(1, ceil($totalEmployees / $perPage));
 $offset = ($page - 1) * $perPage;
-$sql = "SELECT * FROM employees $where ORDER BY employee_id ASC LIMIT $perPage OFFSET $offset";
+$sql = "SELECT e.*, (
+  SELECT COUNT(*) FROM assets a WHERE a.assigned_to_employee_id = e.id
+) AS asset_count
+FROM employees e $where ORDER BY e.employee_id ASC LIMIT $perPage OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -288,12 +291,13 @@ include 'includes/header.php';
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"># Assets</th>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
@@ -304,6 +308,98 @@ include 'includes/header.php';
             <td class="px-6 py-4 whitespace-nowrap text-gray-900"><?php echo htmlspecialchars($emp['position']); ?></td>
             <td class="px-6 py-4 whitespace-nowrap text-gray-900"><?php echo htmlspecialchars($emp['department']); ?></td>
             <td class="px-6 py-4 whitespace-nowrap text-gray-900"><?php echo htmlspecialchars($emp['email']); ?></td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-900 text-center">
+              <?php if ((int)$emp['asset_count'] > 0): ?>
+                <a href="#" class="text-blue-600 hover:underline font-semibold" onclick="showEmployeeAssetsModal(<?php echo $emp['id']; ?>, '<?php echo htmlspecialchars($emp['name'], ENT_QUOTES, 'UTF-8'); ?>'); return false;">
+                  <?php echo (int)$emp['asset_count']; ?> asset<?php echo ((int)$emp['asset_count'] > 1 ? 's' : ''); ?>
+                </a>
+              <?php else: ?>
+                0
+              <?php endif; ?>
+            </td>
+<!-- Employee Assets Modal -->
+<div id="employeeAssetsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto max-h-[90vh] flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b">
+      <h5 class="text-lg font-semibold flex items-center gap-2">
+        <!-- Heroicon: clipboard-list -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-6 4h6a2 2 0 002-2V7a2 2 0 00-2-2h-1V4a2 2 0 10-4 0v1H7a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        Assets Assigned to <span id="employeeAssetsName" class="ml-2 text-blue-700"></span>
+      </h5>
+      <button type="button" class="text-gray-400 hover:text-gray-700 text-2xl font-bold" onclick="document.getElementById('employeeAssetsModal').classList.add('hidden')">&times;</button>
+    </div>
+    <div class="px-6 py-4 overflow-y-auto flex-1">
+      <div id="employeeAssetsContent">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 px-6 py-4 border-t bg-gray-50 rounded-b-lg">
+      <button type="button" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300" onclick="document.getElementById('employeeAssetsModal').classList.add('hidden')">Close</button>
+    </div>
+  </div>
+</div>
+<script>
+function showEmployeeAssetsModal(employeeId, employeeName) {
+  const modal = document.getElementById('employeeAssetsModal');
+  const content = document.getElementById('employeeAssetsContent');
+  const nameSpan = document.getElementById('employeeAssetsName');
+  nameSpan.textContent = employeeName;
+  content.innerHTML = '<div class="text-gray-500 text-sm">Loading...</div>';
+  modal.classList.remove('hidden');
+  fetch('employee_assets_api.php?employee_id=' + encodeURIComponent(employeeId))
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        content.innerHTML = `<div class='bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-sm'>${data.error}</div>`;
+        return;
+      }
+      if (!data.assets || data.assets.length === 0) {
+        content.innerHTML = '<div class="text-gray-500 text-sm">No assets assigned to this employee.</div>';
+        return;
+      }
+      let html = '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead><tr>' +
+        '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Asset Tag</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Serial Number</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vendor</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>' +
+        '</tr></thead><tbody>';
+      // Status mapping
+      const statusMap = {
+        'active': 'In Use',
+        'inactive': 'Available',
+        'maintenance': 'In Repair',
+        'disposed': 'Retired',
+        'Active': 'In Use',
+        'Inactive': 'Available',
+        'Maintenance': 'In Repair',
+        'Dispose': 'Retired',
+        'Disposed': 'Retired',
+        'dispose': 'Retired'
+      };
+      for (const row of data.assets) {
+        let statusLabel = row.status;
+        if (statusLabel && statusMap[statusLabel]) {
+          statusLabel = statusMap[statusLabel];
+        }
+        html += '<tr>' +
+          `<td class="px-4 py-2 whitespace-nowrap text-blue-700 font-semibold">${row.asset_tag || ''}</td>` +
+          `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.serial_number || ''}</td>` +
+          `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${statusLabel || ''}</td>` +
+          `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.category || ''}</td>` +
+          `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.vendor || ''}</td>` +
+          `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.location || ''}</td>` +
+          '</tr>';
+      }
+      html += '</tbody></table></div>';
+      content.innerHTML = html;
+    })
+    .catch(err => {
+      content.innerHTML = `<div class='bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-sm'>Error loading assets.</div>`;
+    });
+}
+</script>
             <td class="px-6 py-4 whitespace-nowrap flex gap-2">
               <a href="employees.php?edit=<?php echo $emp['id']; ?>" class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition">Edit</a>
               <a href="employees.php?delete=<?php echo $emp['id']; ?>" class="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 text-xs font-medium transition" onclick="return confirm('Delete this employee?');">Delete</a>
