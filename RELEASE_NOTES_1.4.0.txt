@@ -1,0 +1,22 @@
+# ITMS v1.4.0 Release Notes
+
+## What's new in v1.4.0
+
+- Model selection (dependent on vendor) added to Add/Edit Asset
+- Note/Remarks field added to Edit Asset
+- Removed asset import popup modal; import now redirects to a dedicated page
+- Updated status mapping and UI for asset addition
+- Bugfixes for import/export and deployment
+- UI/UX improvements to asset forms
+- Version bump to 1.4.0
+
+---
+
+**Release Date:** August 6, 2025
+
+For installation and upgrade instructions, see the README.md in this repository.
+
+---
+
+© 2025 IT Management System
+Built for efficient IT asset tracking and management.
