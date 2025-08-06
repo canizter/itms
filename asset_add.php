@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location_id = $_POST['location_id'] ?? '';
     $status = $_POST['status'] ?? 'active';
 
+    $model_id = $_POST['model_id'] ?? '';
     $serial_number = trim($_POST['serial_number'] ?? '');
     $lan_mac = trim($_POST['lan_mac'] ?? '');
     $wlan_mac = trim($_POST['wlan_mac'] ?? '');
@@ -33,6 +34,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$category_id) $errors[] = 'Category is required.';
     if (!$vendor_id) $errors[] = 'Vendor is required.';
     if (!$location_id) $errors[] = 'Location is required.';
+
+    // Check if models exist for this vendor
+    $model_count = 0;
+    if ($vendor_id) {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM models WHERE vendor_id = ?');
+        $stmt->execute([$vendor_id]);
+        $model_count = (int)$stmt->fetchColumn();
+    }
+    if ($model_count > 0 && !$model_id) {
+        $errors[] = 'Model is required for the selected vendor.';
+    }
 
     if ($serial_number === '') $errors[] = 'Serial Number is required.';
     // MAC address validation regex
@@ -56,12 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Set status automatically: 'active' (In Use) if assigned, 'inactive' (Available) if not
         $auto_status = 'inactive';
         try {
-            $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, location_id, status, serial_number, lan_mac, wlan_mac) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$asset_tag, $category_id, $vendor_id, $location_id, $auto_status, $serial_number, $lan_mac, $wlan_mac]);
+            $stmt = $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, model_id, location_id, status, serial_number, lan_mac, wlan_mac) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$asset_tag, $category_id, $vendor_id, $model_id ?: null, $location_id, $auto_status, $serial_number, $lan_mac, $wlan_mac]);
             $new_asset_id = $pdo->lastInsertId();
             // Log asset creation
             $log_stmt = $pdo->prepare('INSERT INTO asset_history (asset_id, field_changed, old_value, new_value, action, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
-            $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'location_id'=>$location_id,'status'=>$auto_status,'serial_number'=>$serial_number,'lan_mac'=>$lan_mac,'wlan_mac'=>$wlan_mac]), 'create', $_SESSION['username'] ?? 'system']);
+            $log_stmt->execute([$new_asset_id, 'ALL', '', json_encode(['asset_tag'=>$asset_tag,'category_id'=>$category_id,'vendor_id'=>$vendor_id,'model_id'=>$model_id,'location_id'=>$location_id,'status'=>$auto_status,'serial_number'=>$serial_number,'lan_mac'=>$lan_mac,'wlan_mac'=>$wlan_mac]), 'create', $_SESSION['username'] ?? 'system']);
             header('Location: assets.php?added=1');
             exit;
         } catch (PDOException $e) {
@@ -112,13 +124,52 @@ include 'includes/header.php';
     </div>
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-      <select name="vendor_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+      <select name="vendor_id" id="vendor_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
         <option value="">Select Vendor</option>
         <?php foreach ($vendors as $ven): ?>
           <option value="<?php echo $ven['id']; ?>" <?php if ($ven['id'] == $vendor_id) echo 'selected'; ?>><?php echo htmlspecialchars($ven['name']); ?></option>
         <?php endforeach; ?>
       </select>
     </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+      <select name="model_id" id="model_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="">Select a vendor first</option>
+      </select>
+    </div>
+<script>
+// Dynamically load models for selected vendor
+document.addEventListener('DOMContentLoaded', function() {
+  const vendorSelect = document.getElementById('vendor_id');
+  const modelSelect = document.getElementById('model_id');
+  function updateModels(vendorId, selectedModelId = '') {
+    if (!vendorId) {
+      modelSelect.innerHTML = '<option value="">Select a vendor first</option>';
+      return;
+    }
+    fetch('api_get_models.php?vendor_id=' + encodeURIComponent(vendorId))
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.models.length > 0) {
+          let opts = '<option value="">Select Model</option>';
+          data.models.forEach(function(model) {
+            opts += `<option value="${model.id}"${model.id == selectedModelId ? ' selected' : ''}>${model.name}</option>`;
+          });
+          modelSelect.innerHTML = opts;
+        } else {
+          modelSelect.innerHTML = '<option value="">N/A</option>';
+        }
+      });
+  }
+  vendorSelect.addEventListener('change', function() {
+    updateModels(this.value);
+  });
+  // On page load, if vendor is preselected (edit/validation), load models
+  if (vendorSelect.value) {
+    updateModels(vendorSelect.value, '');
+  }
+});
+</script>
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
       <select name="location_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>

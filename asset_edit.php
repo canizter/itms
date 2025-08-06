@@ -20,16 +20,19 @@ if (!$asset) {
     exit;
 }
 // Initialize all variables used in the form
+// Model support
 $errors = [];
 $asset_tag = $asset['asset_tag'];
 $category_id = $asset['category_id'];
 $vendor_id = $asset['vendor_id'];
+$model_id = $asset['model_id'] ?? '';
 $location_id = $asset['location_id'] ?? '';
 $status = $asset['status'] ?? 'active';
 $serial_number = $asset['serial_number'] ?? '';
 $lan_mac = $asset['lan_mac'] ?? '';
 $wlan_mac = $asset['wlan_mac'] ?? '';
 $assigned_to_employee_id = $asset['assigned_to_employee_id'] ?? '';
+$asset_note = $asset['notes'] ?? '';
 // Fetch select options if not already present
 if (!isset($categories)) {
     $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
@@ -49,12 +52,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $asset_tag = trim($_POST['asset_tag'] ?? '');
     $category_id = (int)($_POST['category_id'] ?? 0);
     $vendor_id = (int)($_POST['vendor_id'] ?? 0);
+    $model_id = $_POST['model_id'] ?? '';
     $location_id = (int)($_POST['location_id'] ?? 0);
     $status = $_POST['status'] ?? 'active';
     $serial_number = trim($_POST['serial_number'] ?? '');
     $lan_mac = trim($_POST['lan_mac'] ?? '');
     $wlan_mac = trim($_POST['wlan_mac'] ?? '');
     $new_assigned_to_employee_id = $_POST['assigned_to_employee_id'] !== '' ? (int)$_POST['assigned_to_employee_id'] : null;
+    $asset_note = trim($_POST['asset_note'] ?? '');
+    // Check if models exist for this vendor
+    $model_count = 0;
+    if ($vendor_id) {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM models WHERE vendor_id = ?');
+        $stmt->execute([$vendor_id]);
+        $model_count = (int)$stmt->fetchColumn();
+    }
+    if ($model_count > 0 && !$model_id) {
+        $errors[] = 'Model is required for the selected vendor.';
+    }
 
     // Validation
     if ($asset_tag === '') {
@@ -82,17 +97,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
             // Update asset
-            $update_stmt = $pdo->prepare('UPDATE assets SET asset_tag=?, category_id=?, vendor_id=?, location_id=?, status=?, serial_number=?, lan_mac=?, wlan_mac=?, assigned_to_employee_id=? WHERE id=?');
+            $update_stmt = $pdo->prepare('UPDATE assets SET asset_tag=?, category_id=?, vendor_id=?, model_id=?, location_id=?, status=?, serial_number=?, lan_mac=?, wlan_mac=?, assigned_to_employee_id=?, notes=? WHERE id=?');
             $update_stmt->execute([
                 $asset_tag,
                 $category_id,
                 $vendor_id,
+                $model_id ?: null,
                 $location_id,
                 $status,
                 $serial_number,
                 $lan_mac,
                 $wlan_mac,
                 $new_assigned_to_employee_id,
+                $asset_note,
                 $asset_id
             ]);
 
@@ -232,13 +249,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-      <select name="vendor_id" class="block w-full border border-gray-300 rounded px-3 py-2" required>
+      <select name="vendor_id" id="edit_vendor_id" class="block w-full border border-gray-300 rounded px-3 py-2" required>
         <option value="">Select Vendor</option>
         <?php foreach ($vendors as $ven): ?>
           <option value="<?php echo $ven['id']; ?>" <?php if ($ven['id'] == $vendor_id) echo 'selected'; ?>><?php echo htmlspecialchars($ven['name']); ?></option>
         <?php endforeach; ?>
       </select>
     </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+      <select name="model_id" id="edit_model_id" class="block w-full border border-gray-300 rounded px-3 py-2">
+        <option value="">Select a vendor first</option>
+      </select>
+    </div>
+<script>
+// Dynamically load models for selected vendor in Edit Asset page
+document.addEventListener('DOMContentLoaded', function() {
+  const vendorSelect = document.getElementById('edit_vendor_id');
+  const modelSelect = document.getElementById('edit_model_id');
+  function updateModels(vendorId, selectedModelId = '') {
+    if (!vendorId) {
+      modelSelect.innerHTML = '<option value="">Select a vendor first</option>';
+      return;
+    }
+    fetch('api_get_models.php?vendor_id=' + encodeURIComponent(vendorId))
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.models.length > 0) {
+          let opts = '<option value="">Select Model</option>';
+          data.models.forEach(function(model) {
+            opts += `<option value="${model.id}"${model.id == selectedModelId ? ' selected' : ''}>${model.name}</option>`;
+          });
+          modelSelect.innerHTML = opts;
+        } else {
+          modelSelect.innerHTML = '<option value="">N/A</option>';
+        }
+      });
+  }
+  if (vendorSelect) {
+    vendorSelect.addEventListener('change', function() {
+      updateModels(this.value);
+    });
+    // On page load, if vendor is preselected, load models and select the current model
+    if (vendorSelect.value) {
+      updateModels(vendorSelect.value, <?php echo json_encode($model_id); ?>);
+    }
+  }
+});
+</script>
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
       <select name="location_id" class="block w-full border border-gray-300 rounded px-3 py-2" required>
@@ -268,6 +326,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">WLAN MAC Address</label>
       <input type="text" name="wlan_mac" class="block w-full border border-gray-300 rounded px-3 py-2" value="<?php echo htmlspecialchars($wlan_mac); ?>" placeholder="00:00:00:00:00:00">
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Note / Remarks</label>
+      <textarea name="asset_note" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Optional note or remarks about this asset."><?php echo htmlspecialchars($asset_note); ?></textarea>
     </div>
     <div class="flex flex-wrap gap-2 mt-6">
       <button type="submit" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-semibold transition">Update Asset</button>

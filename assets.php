@@ -258,37 +258,11 @@ try {
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
           Add New Asset
         </button>
-        <button type="button" onclick="document.getElementById('importAssetsModal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 font-semibold transition">
+        <a href="import_assets.php" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 font-semibold transition">
           <!-- Heroicon: arrow-down-tray -->
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-8m0 8l-4-4m4 4l4-4m-8 8h8a2 2 0 002-2V6a2 2 0 00-2-2h-8a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
           Import
-        </button>
-<!-- Import Assets Modal -->
-<div id="importAssetsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
-  <div class="bg-white rounded-lg shadow-lg w-full max-w-lg mx-auto max-h-[90vh] flex flex-col">
-    <div class="flex items-center justify-between px-6 py-4 border-b">
-      <h5 class="text-lg font-semibold flex items-center gap-2">
-        <!-- Heroicon: arrow-down-tray -->
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-8m0 8l-4-4m4 4l4-4m-8 8h8a2 2 0 002-2V6a2 2 0 00-2-2h-8a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-        Import Assets from CSV
-      </h5>
-      <button type="button" class="text-gray-400 hover:text-gray-700 text-2xl font-bold" onclick="document.getElementById('importAssetsModal').classList.add('hidden')">&times;</button>
-    </div>
-    <div class="px-6 py-4 overflow-y-auto flex-1">
-      <form method="POST" enctype="multipart/form-data" action="import_assets.php">
-        <div class="mb-4">
-          <label for="csv_file" class="block text-sm font-medium text-gray-700 mb-1">CSV File</label>
-          <input type="file" name="csv_file" id="csv_file" class="block w-full border border-gray-300 rounded px-3 py-2" accept=".csv" required>
-          <small>Download template: <a href="assets_import_template.csv" download class="text-blue-600 underline">assets_import_template.csv</a></small>
-        </div>
-        <div class="flex gap-2 justify-end">
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold transition">Import</button>
-          <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-semibold transition" onclick="document.getElementById('importAssetsModal').classList.add('hidden')">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+        </a>
       <?php endif; ?>
       <a href="export_assets.php" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 font-semibold transition">
         <!-- Heroicon: arrow-up-tray -->
@@ -561,13 +535,54 @@ function showAssignmentHistoryModal(assetId, assetTag) {
           </div>
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-            <select name="vendor_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            <select name="vendor_id" id="modal_vendor_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
               <option value="">Select Vendor</option>
               <?php foreach ($vendors as $ven): ?>
                 <option value="<?php echo $ven['id']; ?>" <?php if ($ven['id'] == $vendor_id) echo 'selected'; ?>><?php echo htmlspecialchars($ven['name']); ?></option>
               <?php endforeach; ?>
             </select>
           </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select name="model_id" id="modal_model_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Select a vendor first</option>
+            </select>
+          </div>
+<script>
+// Dynamically load models for selected vendor in Add Asset Modal
+document.addEventListener('DOMContentLoaded', function() {
+  const vendorSelect = document.getElementById('modal_vendor_id');
+  const modelSelect = document.getElementById('modal_model_id');
+  function updateModels(vendorId, selectedModelId = '') {
+    if (!vendorId) {
+      modelSelect.innerHTML = '<option value="">Select a vendor first</option>';
+      return;
+    }
+    fetch('api_get_models.php?vendor_id=' + encodeURIComponent(vendorId))
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.models.length > 0) {
+          let opts = '<option value="">Select Model</option>';
+          data.models.forEach(function(model) {
+            opts += `<option value="${model.id}"${model.id == selectedModelId ? ' selected' : ''}>${model.name}</option>`;
+          });
+          modelSelect.innerHTML = opts;
+        } else {
+          modelSelect.innerHTML = '<option value="">N/A</option>';
+        }
+      });
+  }
+  if (vendorSelect) {
+    vendorSelect.addEventListener('change', function() {
+      updateModels(this.value);
+    });
+    // On modal open, if vendor is preselected, load models
+    if (vendorSelect.value) {
+      updateModels(vendorSelect.value, '');
+    }
+  }
+});
+</script>
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
             <select name="location_id" class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>

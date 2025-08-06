@@ -218,6 +218,16 @@ For technical support or questions:
 
 ## Version History
 
+
+**v1.4.0** - August 2025
+- Model selection (dependent on vendor) added to Add/Edit Asset
+- Note/Remarks field added to Edit Asset
+- Removed asset import popup modal; import now redirects to a dedicated page
+- Updated status mapping and UI for asset addition
+- Bugfixes for import/export and deployment
+- UI/UX improvements to asset forms
+- Version bump to 1.4.0
+
 **v1.2.0** - Asset import status fix, asset_tag uniqueness enforced, and other improvements
 **v1.0.0** - Initial Release
 - Core asset management functionality
