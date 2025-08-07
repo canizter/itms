@@ -1,7 +1,7 @@
 
 <?php
-// ITMS Setup Script (v1.5.1)
-// This script helps initialize the IT Management System (Version 1.5.1)
+// ITMS Setup Script (v1.5.2)
+// This script helps initialize the IT Management System (Version 1.5.2)
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);

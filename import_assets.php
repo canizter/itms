@@ -75,6 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                     $stmt->execute([$employee_id]);
                     $emp_id = $stmt->fetchColumn();
                 }
+                // Ensure emp_id is null if not found or empty
+                if (empty($emp_id)) $emp_id = null;
                 // Map status from display value to ENUM value
                 $status_enum_map = [
                     'in use' => 'active',

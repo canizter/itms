@@ -2,6 +2,10 @@
 # Changelog
 - Footer and documentation updated to version 1.5
 
+## [1.5.2] - 2025-08-07
+### Fixed
+- Asset import: assigned_to_employee_id is now always NULL if blank or not found (prevents SQL error)
+
 ## [1.5.1] - 2025-08-07
 ### Added
 - Model column to asset list (between Vendor and Serial Number)

@@ -140,7 +140,7 @@ $sql = "SELECT * FROM consumables ORDER BY name ASC LIMIT $perPage OFFSET $offse
 $consumables = $pdo->query($sql)->fetchAll();
 ?>
 
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
   <?php if ($success): ?>
     <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-3 text-sm font-semibold flex items-center gap-2">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2l4-4m6 2a9 9 0 11-18 0a9 9 0 0118 0z" /></svg>

@@ -112,11 +112,6 @@ checkSessionTimeout();
                         <li><a href="locations.php" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 <?php echo (basename($_SERVER['PHP_SELF']) == 'locations.php') ? 'active' : ''; ?>">Locations</a></li>
                     </ul>
                 </li>
-                <li class="nav-item">
-                    <a href="employees.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'employees.php') ? 'active' : ''; ?>">
-                        Employees
-                    </a>
-                </li>
                 <?php if (hasRole('manager')): ?>
                 <li class="nav-item dropdown relative">
                     <a href="consumables.php" class="nav-link <?php echo in_array(basename($_SERVER['PHP_SELF']), ['consumables.php','consumables_types.php']) ? 'active' : ''; ?>">
@@ -130,6 +125,11 @@ checkSessionTimeout();
                     </ul>
                 </li>
                 <?php endif; ?>
+                <li class="nav-item">
+                    <a href="employees.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'employees.php') ? 'active' : ''; ?>">
+                        Employees
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a href="reports.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'reports.php') ? 'active' : ''; ?>">
                         Reports
