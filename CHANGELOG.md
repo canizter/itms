@@ -2,6 +2,10 @@
 # Changelog
 - Footer and documentation updated to version 1.5
 
+## [1.5.3] - 2025-08-07
+### Added
+- Asset import now records assignment history in asset_assignments when assigning via CSV
+
 ## [1.5.2] - 2025-08-07
 ### Fixed
 - Asset import: assigned_to_employee_id is now always NULL if blank or not found (prevents SQL error)

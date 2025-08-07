@@ -97,6 +97,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 } else {
                     $pdo->prepare('INSERT INTO assets (asset_tag, category_id, vendor_id, model_id, location_id, status, serial_number, lan_mac, wlan_mac, notes, assigned_to_employee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
                         ->execute([$asset_tag, $cat_id, $ven_id, $model_id, $loc_id, $status, $serial_number, $lan_mac, $wlan_mac, $notes, $emp_id]);
+                    // Get the new asset_id
+                    $asset_id = $pdo->lastInsertId();
+                }
+                // Insert into asset_assignments if employee assigned
+                if ($emp_id) {
+                    $now = date('Y-m-d');
+                    $assign_stmt = $pdo->prepare('INSERT INTO asset_assignments (asset_id, employee_id, assigned_by, assigned_date, notes) VALUES (?, ?, ?, ?, ?)');
+                    $assign_stmt->execute([$asset_id, $emp_id, $_SESSION['username'] ?? 'import', $now, 'Imported via CSV']);
                 }
                 $rowCount++;
             }
