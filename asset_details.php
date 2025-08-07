@@ -57,7 +57,7 @@ include 'includes/header.php';
             </div>
             <div class="flex justify-between py-2">
               <dt class="font-medium text-gray-700">Vendor:</dt>
-              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['vendor_name']); ?></dd>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['vendor_name'] ?? ''); ?></dd>
             </div>
             <div class="flex justify-between py-2">
               <dt class="font-medium text-gray-700">Location:</dt>
@@ -92,6 +92,10 @@ include 'includes/header.php';
             <div class="flex justify-between py-2">
               <dt class="font-medium text-gray-700">WLAN MAC Address:</dt>
               <dd class="text-gray-900"><?php echo htmlspecialchars($asset['wlan_mac']); ?></dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="font-medium text-gray-700">Notes / Remarks:</dt>
+              <dd class="text-gray-900"><?php echo htmlspecialchars($asset['notes']); ?></dd>
             </div>
           </dl>
         </div>

@@ -1,5 +1,5 @@
 -- ITMS Asset Management Migration Script
--- Version: 1.5
+-- Version: 1.5.1
 -- Created: 2025-08-07
 
 -- Categories Table

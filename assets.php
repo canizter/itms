@@ -153,12 +153,14 @@ try {
 
     // Get assets with assigned employee info
     $sql = "
-        SELECT a.id, a.asset_tag, a.serial_number, a.lan_mac, a.wlan_mac, a.category_id, a.vendor_id, a.location_id, a.status, a.assigned_to_employee_id,
-               c.name as category_name, v.name as vendor_name, l.name as location_name,
+        SELECT a.id, a.asset_tag, a.serial_number, a.lan_mac, a.wlan_mac, a.category_id, a.vendor_id, a.model_id, a.location_id, a.status, a.assigned_to_employee_id,
+               a.notes,
+               c.name as category_name, v.name as vendor_name, m.name as model_name, l.name as location_name,
                e.employee_id as assigned_employee_id, e.name as assigned_employee_name
         FROM assets a 
         LEFT JOIN categories c ON a.category_id = c.id
         LEFT JOIN vendors v ON a.vendor_id = v.id
+        LEFT JOIN models m ON a.model_id = m.id
         LEFT JOIN locations l ON a.location_id = l.id
         LEFT JOIN employees e ON a.assigned_to_employee_id = e.id
         {$where_clause}
@@ -299,12 +301,14 @@ try {
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
               <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LAN MAC Address</th> -->
               <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">WLAN MAC Address</th> -->
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Employee ID</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Employee Name</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note / Remarks</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -343,12 +347,14 @@ try {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['model_name'] ?? 'N/A'); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['serial_number'] ?? ''); ?></td>
                 <!-- <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['lan_mac'] ?? ''); ?></td> -->
                 <!-- <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['wlan_mac'] ?? ''); ?></td> -->
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['location_name'] ?? 'N/A'); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['assigned_employee_id'] ?? ''); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['assigned_employee_name'] ?? ''); ?></td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['notes'] ?? ''); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap flex gap-2">
                   <button type="button" onclick="showAssetModal(<?php echo htmlspecialchars(json_encode($asset), ENT_QUOTES, 'UTF-8'); ?>)" class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition" title="View">
                     <!-- Heroicon: eye -->
@@ -468,17 +474,34 @@ function showAssignmentHistoryModal(assetId, assetTag) {
       </div>
       <!-- Pagination Controls -->
       <?php if ($total_pages > 1): ?>
-      <div class="flex justify-center items-center gap-2 py-4">
-        <?php if ($page > 1): ?>
-          <a href="<?php echo htmlspecialchars(preg_replace('/([&?])page=\d+/', '$1', $_SERVER['REQUEST_URI'])) . (strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?') . 'page=' . ($page-1); ?>" class="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">&laquo; Prev</a>
-        <?php endif; ?>
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-          <a href="<?php echo htmlspecialchars(preg_replace('/([&?])page=\d+/', '$1', $_SERVER['REQUEST_URI'])) . (strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?') . 'page=' . $i; ?>" class="px-3 py-1 rounded <?php echo $i == $page ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>"><?php echo $i; ?></a>
-        <?php endfor; ?>
-        <?php if ($page < $total_pages): ?>
-          <a href="<?php echo htmlspecialchars(preg_replace('/([&?])page=\d+/', '$1', $_SERVER['REQUEST_URI'])) . (strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?') . 'page=' . ($page+1); ?>" class="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Next &raquo;</a>
-        <?php endif; ?>
-      </div>
+        <nav class="flex justify-center mt-6" aria-label="Asset pagination">
+          <ul class="inline-flex items-center -space-x-px">
+            <!-- Previous button -->
+            <li>
+              <a class="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 <?php if ($page <= 1) echo 'pointer-events-none opacity-50'; ?>" href="assets.php?page=<?php echo max(1, $page-1); ?><?php 
+                $q = $_GET; $q['page'] = max(1, $page-1); unset($q['sort'],$q['order']); echo ($search !== '' ? '&search=' . urlencode($search) : '');
+                if ($category_filter !== '') echo '&category=' . urlencode($category_filter);
+                if ($status_filter !== '') echo '&status=' . urlencode($status_filter);
+                if ($vendor_filter !== '') echo '&vendor=' . urlencode($vendor_filter);
+                if ($location_filter !== '') echo '&location=' . urlencode($location_filter);
+              ?>">Previous</a>
+            </li>
+            <!-- Current page number -->
+            <li>
+              <span class="px-4 py-2 leading-tight text-gray-700 bg-gray-200 border border-gray-300">Page <?php echo $page; ?> of <?php echo $total_pages; ?></span>
+            </li>
+            <!-- Next button -->
+            <li>
+              <a class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 <?php if ($page >= $total_pages) echo 'pointer-events-none opacity-50'; ?>" href="assets.php?page=<?php echo min($total_pages, $page+1); ?><?php 
+                $q = $_GET; $q['page'] = min($total_pages, $page+1); unset($q['sort'],$q['order']); echo ($search !== '' ? '&search=' . urlencode($search) : '');
+                if ($category_filter !== '') echo '&category=' . urlencode($category_filter);
+                if ($status_filter !== '') echo '&status=' . urlencode($status_filter);
+                if ($vendor_filter !== '') echo '&vendor=' . urlencode($vendor_filter);
+                if ($location_filter !== '') echo '&location=' . urlencode($location_filter);
+              ?>">Next</a>
+            </li>
+          </ul>
+        </nav>
       <?php endif; ?>
     <?php endif; ?>
   </div>
