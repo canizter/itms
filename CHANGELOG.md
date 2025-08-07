@@ -1,13 +1,18 @@
 # Changelog
 
-## [1.3.1] - 2025-08-05
+## [1.5] - 2025-08-07
 ### Added
-- Enforced unique model names per vendor in the Models page (UI and DB logic).
-- Vendors page now sorts vendors alphabetically by name.
-
-### Fixed
-- Footer now appears below the models list on the Models page.
-- Improved error messages for model CRUD operations.
+- Full migration script for current schema
+- Pagination for assets, consumables, and history pages (matching employee list style)
+- Improved documentation and versioning in all files
 
 ### Changed
-- General code cleanup and UI consistency improvements.
+- Footer and documentation updated to version 1.5
+- Setup wizard documentation updated
+
+### Fixed
+- Directory creation for migrations
+- Minor UI/UX improvements
+
+---
+See previous releases for earlier changes.
