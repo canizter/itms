@@ -31,10 +31,9 @@ if (!$user) {
 }
 include 'includes/header.php';
 ?>
-<div class="container mt-4">
-    <h2>My Profile</h2>
-    <div class="card" style="max-width: 500px; margin: 0 auto;">
-        <div class="card-body">
+<div class="max-w-2xl mx-auto mt-8">
+    <h2 class="text-2xl font-extrabold tracking-tight text-blue-900 drop-shadow-sm mb-4">My Profile</h2>
+    <div class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl border border-blue-100 p-8">
             <?php foreach ($errors as $error): ?>
                 <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
             <?php endforeach; ?>

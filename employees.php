@@ -179,7 +179,7 @@ include 'includes/header.php';
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-    <h2 class="text-2xl font-bold tracking-tight text-gray-900">Employee List</h2>
+  <h2 class="text-xl font-bold tracking-tight text-gray-900">Employee List</h2>
     <div class="flex gap-2">
       <button class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold transition" onclick="document.getElementById('addEmployeeModal').classList.remove('hidden')">
         <!-- Heroicon: plus -->
@@ -194,14 +194,14 @@ include 'includes/header.php';
     </div>
   </div>
   <?php if ($success): ?>
-    <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-3 text-sm font-semibold flex items-center gap-2">
+  <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-3 text-xs font-semibold flex items-center gap-2">
       <!-- Heroicon: check-circle -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2l4-4m6 2a9 9 0 11-18 0a9 9 0 0118 0z" /></svg>
       <?php echo htmlspecialchars($success); ?>
     </div>
   <?php endif; ?>
   <?php foreach ($errors as $error): ?>
-    <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-sm font-semibold flex items-center gap-2">
+  <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-xs font-semibold flex items-center gap-2">
       <!-- Heroicon: exclamation -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 17a5 5 0 100-10 5 5 0 000 10z" /></svg>
       <?php echo htmlspecialchars($error); ?>
@@ -214,12 +214,12 @@ include 'includes/header.php';
       <form method="post">
         <input type="hidden" name="edit_id" value="<?php echo htmlspecialchars($edit_id); ?>">
         <div class="flex items-center justify-between px-6 py-4 border-b">
-          <h5 class="text-lg font-semibold flex items-center gap-2">
+          <h5 class="text-base font-semibold flex items-center gap-2">
             <!-- Heroicon: plus-circle -->
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
             <?php echo $editing ? 'Edit Employee' : 'Add Employee'; ?>
           </h5>
-          <button type="button" class="text-gray-400 hover:text-gray-700 text-2xl font-bold" onclick="document.getElementById('addEmployeeModal').classList.add('hidden')">&times;</button>
+          <button type="button" class="text-gray-400 hover:text-gray-700 text-xl font-bold" onclick="document.getElementById('addEmployeeModal').classList.add('hidden')">&times;</button>
         </div>
         <div class="px-6 py-4 space-y-4">
           <div>
@@ -287,9 +287,10 @@ include 'includes/header.php';
     <?php endif; ?>
   </form>
 
-  <div class="bg-white shadow rounded-lg overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
+  <div class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl border border-blue-100 overflow-hidden">
+    <div style="overflow-x: auto;">
+      <table class="min-w-full divide-y divide-blue-100 bg-white rounded-2xl overflow-hidden">
+      <thead class="bg-blue-50">
         <tr>
       <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
       <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -300,7 +301,7 @@ include 'includes/header.php';
       <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
-      <tbody class="bg-white divide-y divide-gray-200">
+      <tbody class="bg-white divide-y divide-blue-100">
         <?php foreach ($employees as $emp): ?>
           <tr>
             <td class="px-6 py-4 whitespace-nowrap text-gray-900"><?php echo htmlspecialchars($emp['employee_id']); ?></td>

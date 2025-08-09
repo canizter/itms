@@ -1,0 +1,11 @@
+# ITMS v1.6 Release Notes
+
+## What's new in v1.6 (2025-08-09)
+- Modernized and compact UI for all management pages
+- Consistent horizontal scroll for all main data tables
+- Asset management actions are now modal-only (no inline Edit/Delete/Assignment)
+- Improved modal status badges and button placement
+- Font size reduced for a more compact look
+- Bug fixes and usability improvements
+
+**Release Date:** August 9, 2025

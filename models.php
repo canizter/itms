@@ -108,12 +108,12 @@ try {
         <input type="hidden" name="model_id" value="<?php echo $edit_id; ?>">
       <?php endif; ?>
       <div class="flex items-center justify-between px-6 py-4 border-b">
-        <h5 class="text-lg font-semibold flex items-center gap-2">
+  <h5 class="text-base font-semibold flex items-center gap-2">
           <!-- Heroicon: plus-circle -->
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
           <?php echo $edit_id ? 'Edit Model' : 'Add Model'; ?>
         </h5>
-        <button type="button" class="text-gray-400 hover:text-gray-700 text-2xl font-bold" onclick="document.getElementById('addModelModal').classList.add('hidden')">&times;</button>
+  <button type="button" class="text-gray-400 hover:text-gray-700 text-xl font-bold" onclick="document.getElementById('addModelModal').classList.add('hidden')">&times;</button>
       </div>
       <div class="px-6 py-4">
         <?php if ($error_message && (isset($_POST['add_model']) || isset($_POST['edit_model']))): ?>
@@ -159,24 +159,23 @@ try {
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
     <div>
-      <h2 class="text-2xl font-bold tracking-tight text-gray-900">Model Management</h2>
-      <div class="text-gray-500 text-sm">Manage hardware models and their associated vendors</div>
+  <h2 class="text-2xl font-extrabold tracking-tight text-blue-900 drop-shadow-sm mb-2">Model Management</h2>
+  <div class="text-blue-500 text-sm font-medium mb-2">Manage hardware models and their associated vendors</div>
     </div>
     <?php if (hasRole('manager')): ?>
-      <button class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded shadow transition" onclick="document.getElementById('addModelModal').classList.remove('hidden')">
-        <!-- Heroicon: plus -->
+      <button class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold shadow-md hover:from-blue-500 hover:to-blue-700 transition" onclick="document.getElementById('addModelModal').classList.remove('hidden')">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
         Add Model
       </button>
     <?php endif; ?>
   </div>
-  <div class="bg-white shadow rounded-lg overflow-hidden">
+  <div class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl border border-blue-100 overflow-hidden">
     <?php if (empty($models)): ?>
       <div class="text-center text-gray-400 py-12">No models found.</div>
     <?php else: ?>
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-blue-100 bg-white rounded-2xl overflow-hidden">
+          <thead class="bg-blue-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model Name</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
@@ -185,7 +184,7 @@ try {
               <?php if (hasRole('manager')): ?><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th><?php endif; ?>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-white divide-y divide-blue-100">
             <?php foreach ($models as $model): ?>
               <tr>
                 <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900"><?php echo htmlspecialchars($model['model_name']); ?></td>

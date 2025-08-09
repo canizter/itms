@@ -3,7 +3,7 @@
     <!-- Footer -->
     <footer style="background-color: #f8f9fa; border-top: 1px solid #e9ecef; margin-top: 3rem; padding: 2rem 0; text-align: center; color: #6c757d;">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
-                <p>&copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?> v1.5.4. All rights reserved.</p>
+                <p>&copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?> v1.6. All rights reserved.</p>
             <p style="font-size: 0.9rem; margin-top: 0.5rem;">
                 Developed for efficient IT asset management | 
                 <a href="http://help.linc-fs.com" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">Support</a>

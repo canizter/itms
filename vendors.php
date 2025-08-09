@@ -80,7 +80,7 @@ if ($id) {
 
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-    <h2 class="text-2xl font-bold tracking-tight text-gray-900">Vendors</h2>
+  <h2 class="text-xl font-bold tracking-tight text-gray-900">Vendors</h2>
     <button class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold transition" onclick="document.getElementById('addVendorModal').classList.remove('hidden')">
       <!-- Heroicon: plus -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
@@ -106,12 +106,12 @@ if ($id) {
       <form method="post">
         <input type="hidden" name="id" value="<?=htmlspecialchars($id)?>">
         <div class="flex items-center justify-between px-6 py-4 border-b">
-          <h5 class="text-lg font-semibold flex items-center gap-2">
+          <h5 class="text-base font-semibold flex items-center gap-2">
             <!-- Heroicon: plus-circle -->
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
             Add Vendor
           </h5>
-          <button type="button" class="text-gray-400 hover:text-gray-700 text-2xl font-bold" onclick="document.getElementById('addVendorModal').classList.add('hidden')">&times;</button>
+          <button type="button" class="text-gray-400 hover:text-gray-700 text-xl font-bold" onclick="document.getElementById('addVendorModal').classList.add('hidden')">&times;</button>
         </div>
         <div class="px-6 py-4">
           <div class="mb-4">
@@ -135,15 +135,16 @@ if ($id) {
     </div>
   <?php endif; ?>
 
-  <div class="bg-white shadow rounded-lg overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
+  <div class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl border border-blue-100 overflow-hidden">
+    <div style="overflow-x: auto;">
+      <table class="min-w-full divide-y divide-blue-100 bg-white rounded-2xl overflow-hidden">
+      <thead class="bg-blue-50">
         <tr>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
-      <tbody class="bg-white divide-y divide-gray-200">
+  <tbody class="bg-white divide-y divide-blue-100">
         <?php foreach ($rows as $r): ?>
           <tr>
             <td class="px-6 py-4 whitespace-nowrap text-gray-900"><?=htmlspecialchars($r['name'])?></td>
@@ -154,7 +155,8 @@ if ($id) {
           </tr>
         <?php endforeach; ?>
       </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </div>
 <script>

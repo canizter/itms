@@ -89,8 +89,8 @@ if (isset($_GET['edit'])) {
 ?>
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
   <div class="mb-8 text-center">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Users</h1>
-    <p class="text-gray-500 text-lg">Manage system users and roles here.</p>
+  <h1 class="text-2xl font-bold text-gray-900 mb-2">Users</h1>
+  <p class="text-gray-500 text-base">Manage system users and roles here.</p>
   </div>
   <div class="bg-white shadow rounded-lg p-8 mb-8">
     <?php if ($success): ?>
@@ -107,7 +107,7 @@ if (isset($_GET['edit'])) {
         <?php echo htmlspecialchars($err); ?>
       </div>
     <?php endforeach; ?>
-    <h3 class="text-xl font-semibold mb-4"><?php echo $edit_user ? 'Edit User' : 'Add New User'; ?></h3>
+  <h3 class="text-lg font-semibold mb-4"><?php echo $edit_user ? 'Edit User' : 'Add New User'; ?></h3>
     <form method="post" action="users.php" class="space-y-4">
       <input type="hidden" name="action" value="<?php echo $edit_user ? 'edit' : 'add'; ?>">
       <?php if ($edit_user): ?>
@@ -147,11 +147,11 @@ if (isset($_GET['edit'])) {
       </div>
     </form>
   </div>
-  <div class="bg-white shadow rounded-lg p-8">
-    <h3 class="text-xl font-semibold mb-4">All Users</h3>
+  <div class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl border border-blue-100 p-8">
+  <h3 class="text-lg font-semibold mb-4">All Users</h3>
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+      <table class="min-w-full divide-y divide-blue-100 bg-white rounded-2xl overflow-hidden">
+        <thead class="bg-blue-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
@@ -161,7 +161,7 @@ if (isset($_GET['edit'])) {
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white divide-y divide-blue-100">
           <?php foreach ($users as $user): ?>
             <tr>
               <td class="px-6 py-4 whitespace-nowrap text-gray-900"><?php echo $user['id']; ?></td>

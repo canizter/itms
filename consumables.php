@@ -141,14 +141,15 @@ $consumables = $pdo->query($sql)->fetchAll();
 ?>
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-  <?php if ($success): ?>
-    <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-3 text-sm font-semibold flex items-center gap-2">
+<div class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl border border-blue-100 overflow-hidden">
+    <?php if ($success): ?>
+  <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-3 text-xs font-semibold flex items-center gap-2">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2l4-4m6 2a9 9 0 11-18 0a9 9 0 0118 0z" /></svg>
       <?php echo htmlspecialchars($success); ?>
     </div>
-  <?php endif; ?>
+    <?php endif; ?>
   <?php foreach ($errors as $error): ?>
-    <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-sm font-semibold flex items-center gap-2">
+  <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-xs font-semibold flex items-center gap-2">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 17a5 5 0 100-10 5 5 0 000 10z" /></svg>
       <?php echo htmlspecialchars($error); ?>
     </div>
@@ -156,7 +157,7 @@ $consumables = $pdo->query($sql)->fetchAll();
 
 
   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-    <h2 class="text-2xl font-bold tracking-tight text-gray-900">Consumables</h2>
+  <h2 class="text-xl font-bold tracking-tight text-gray-900">Consumables</h2>
     <div class="flex gap-2">
       <a href="history.php" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 font-semibold transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2l4-4m6 2a9 9 0 11-18 0a9 9 0 0118 0z" /></svg>
@@ -173,7 +174,7 @@ $consumables = $pdo->query($sql)->fetchAll();
   <div class="bg-white shadow rounded-lg overflow-hidden">
     <?php if (empty($consumables)): ?>
       <div class="text-center text-gray-400 py-12">
-        <h3 class="text-lg font-semibold mb-2">No consumables found</h3>
+  <h3 class="text-base font-semibold mb-2">No consumables found</h3>
         <p class="mb-4">Try adjusting your search criteria or add your first consumable.</p>
         <a href="add_consumable.php" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
@@ -210,7 +211,6 @@ $consumables = $pdo->query($sql)->fetchAll();
                   ?>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($c['name'] ?? ''); ?></td>
-                <!-- <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($c['min_quantity']); ?></td> -->
                 <!-- <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($c['max_quantity']); ?></td> -->
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($c['quantity']); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap">

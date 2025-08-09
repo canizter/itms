@@ -2,12 +2,12 @@
 <div id="assignmentHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
   <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto max-h-[90vh] flex flex-col">
     <div class="flex items-center justify-between px-6 py-4 border-b">
-      <h5 class="text-lg font-semibold flex items-center gap-2">
+  <h5 class="text-base font-semibold flex items-center gap-2">
         <!-- Heroicon: clock -->
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         Assignment History - <span id="assignmentHistoryAssetTag" class="ml-2 text-purple-700"></span>
       </h5>
-      <button type="button" class="text-gray-400 hover:text-gray-700 text-2xl font-bold" onclick="document.getElementById('assignmentHistoryModal').classList.add('hidden')">&times;</button>
+  <button type="button" class="text-gray-400 hover:text-gray-700 text-xl font-bold" onclick="document.getElementById('assignmentHistoryModal').classList.add('hidden')">&times;</button>
     </div>
     <div class="px-6 py-4 overflow-y-auto flex-1">
       <div id="assignmentHistoryContent">
@@ -103,21 +103,31 @@ try {
     $order = isset($_GET['order']) && strtoupper($_GET['order']) === 'DESC' ? 'DESC' : 'ASC';
 
     // Search and filter
-    $search = trim($_GET['search'] ?? '');
-    $category_filter = $_GET['category'] ?? '';
-    $status_filter = $_GET['status'] ?? '';
-    $vendor_filter = $_GET['vendor'] ?? '';
-    $location_filter = $_GET['location'] ?? '';
+  $search = trim($_GET['search'] ?? '');
+  $category_filter = $_GET['category'] ?? '';
+  $status_filter = $_GET['status'] ?? '';
+  $vendor_filter = $_GET['vendor'] ?? '';
+  $location_filter = $_GET['location'] ?? '';
+  $model_filter = $_GET['model'] ?? '';
+  $serial_filter = trim($_GET['serial'] ?? '');
 
     $where_clauses = [];
     $params = [];
-    if ($search !== '') {
-        $where_clauses[] = '(a.asset_tag LIKE ? OR a.serial_number LIKE ? OR a.lan_mac LIKE ? OR a.wlan_mac LIKE ?)';
-        $params[] = "%$search%";
-        $params[] = "%$search%";
-        $params[] = "%$search%";
-        $params[] = "%$search%";
-    }
+  if ($search !== '') {
+    $where_clauses[] = '(a.asset_tag LIKE ? OR a.serial_number LIKE ? OR a.lan_mac LIKE ? OR a.wlan_mac LIKE ?)';
+    $params[] = "%$search%";
+    $params[] = "%$search%";
+    $params[] = "%$search%";
+    $params[] = "%$search%";
+  }
+  if ($serial_filter !== '') {
+    $where_clauses[] = 'a.serial_number LIKE ?';
+    $params[] = "%$serial_filter%";
+  }
+  if ($model_filter !== '') {
+    $where_clauses[] = 'a.model_id = ?';
+    $params[] = $model_filter;
+  }
     if ($category_filter !== '') {
         $where_clauses[] = 'a.category_id = ?';
         $params[] = $category_filter;
@@ -173,9 +183,10 @@ try {
     $assets = $stmt->fetchAll();
 
     // Get filter options
-    $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name")->fetchAll();
-    $vendors = $pdo->query("SELECT id, name FROM vendors ORDER BY name")->fetchAll();
-    $locations = $pdo->query("SELECT id, name FROM locations ORDER BY name")->fetchAll();
+  $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name")->fetchAll();
+  $vendors = $pdo->query("SELECT id, name FROM vendors ORDER BY name")->fetchAll();
+  $locations = $pdo->query("SELECT id, name FROM locations ORDER BY name")->fetchAll();
+  $models = $pdo->query("SELECT id, name FROM models ORDER BY name")->fetchAll();
 
 } catch (Exception $e) {
     $_SESSION['error_message'] = 'Error loading assets: ' . $e->getMessage();
@@ -191,90 +202,127 @@ try {
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
   <div class="mb-8">
-    <h1 class="text-2xl font-bold tracking-tight text-gray-900">Assets Management</h1>
-
+  <h1 class="text-2xl font-extrabold tracking-tight text-blue-900 drop-shadow-sm mb-2">Assets Management</h1>
+  <p class="text-base text-blue-500 font-medium mb-2">Modern IT Asset Inventory</p>
   </div>
 
   <!-- Search and Filter Bar -->
-  <form method="GET" action="assets.php" id="searchForm" class="bg-white shadow rounded-lg p-6 mb-6">
-    <div class="flex flex-wrap gap-4 items-end">
-      <div class="flex flex-col min-w-[180px] flex-1">
-        <label for="search" class="text-sm font-medium text-gray-700 mb-1">Search</label>
-        <input type="text" name="search" id="search" class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search assets..." value="<?php echo htmlspecialchars($search); ?>">
-      </div>
-      <div class="flex flex-col flex-1 min-w-[150px]">
-        <label for="category" class="text-sm font-medium text-gray-700 mb-1">Category</label>
-        <select name="category" id="category" class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">All Categories</option>
-          <?php foreach ($categories as $cat): ?>
-            <option value="<?php echo $cat['id']; ?>" <?php if ($category_filter == $cat['id']) echo 'selected'; ?>><?php echo htmlspecialchars($cat['name']); ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="flex flex-col flex-1 min-w-[150px]">
-        <label for="status" class="text-sm font-medium text-gray-700 mb-1">Status</label>
-        <select name="status" id="status" class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">All Statuses</option>
-          <option value="In Use" <?php if ($status_filter == 'In Use') echo 'selected'; ?>>In Use</option>
-          <option value="Available" <?php if ($status_filter == 'Available') echo 'selected'; ?>>Available</option>
-          <option value="In Repair" <?php if ($status_filter == 'In Repair') echo 'selected'; ?>>In Repair</option>
-          <option value="Retired" <?php if ($status_filter == 'Retired') echo 'selected'; ?>>Retired</option>
-        </select>
-      </div>
-      <div class="flex flex-col flex-1 min-w-[150px]">
-        <label for="vendor" class="text-sm font-medium text-gray-700 mb-1">Vendor</label>
-        <select name="vendor" id="vendor" class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">All Vendors</option>
-          <?php foreach ($vendors as $ven): ?>
-            <option value="<?php echo $ven['id']; ?>" <?php if ($vendor_filter == $ven['id']) echo 'selected'; ?>><?php echo htmlspecialchars($ven['name']); ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="flex flex-col flex-1 min-w-[150px]">
-        <label for="location" class="text-sm font-medium text-gray-700 mb-1">Location</label>
-        <select name="location" id="location" class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">All Locations</option>
-          <?php foreach ($locations as $loc): ?>
-            <option value="<?php echo $loc['id']; ?>" <?php if ($location_filter == $loc['id']) echo 'selected'; ?>><?php echo htmlspecialchars($loc['name']); ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="flex flex-row gap-2 items-end">
-        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold transition">
-          <!-- Heroicon: search -->
+  <form method="GET" action="assets.php" id="searchForm" class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl p-6 mb-8 border border-blue-100">
+    <div class="flex flex-wrap gap-3 items-center justify-between">
+      <div class="relative flex items-center min-w-[240px] flex-1">
+  <input type="text" name="search" id="search" class="peer pl-12 pr-4 border-0 ring-2 ring-blue-200 focus:ring-blue-500 bg-white rounded-full py-3 h-12 text-sm focus:outline-none w-full transition-all placeholder-transparent" placeholder=" " value="<?php echo htmlspecialchars($search); ?>">
+  <label for="search" class="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs peer-focus:text-blue-600 bg-white px-1">Search assets...</label>
+        <span class="absolute left-4 text-blue-400 pointer-events-none">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" /></svg>
-          Search
-        </button>
-        <a href="assets.php" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-semibold transition">Clear</a>
+        </span>
       </div>
+  <select name="category" id="category" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[140px] transition-all">
+        <option value="">All Categories</option>
+        <?php foreach ($categories as $cat): ?>
+          <option value="<?php echo $cat['id']; ?>" <?php if ($category_filter == $cat['id']) echo 'selected'; ?>><?php echo htmlspecialchars($cat['name']); ?></option>
+        <?php endforeach; ?>
+      </select>
+  <select name="status" id="status" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+        <option value="">All Statuses</option>
+        <option value="active" <?php if ($status_filter == 'active') echo 'selected'; ?>>In Use</option>
+        <option value="inactive" <?php if ($status_filter == 'inactive') echo 'selected'; ?>>Available</option>
+        <option value="maintenance" <?php if ($status_filter == 'maintenance') echo 'selected'; ?>>In Repair</option>
+        <option value="disposed" <?php if ($status_filter == 'disposed') echo 'selected'; ?>>Retired</option>
+      </select>
+  <select name="model" id="model" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+        <option value="">All Models</option>
+        <?php foreach ($models as $mod): ?>
+          <option value="<?php echo $mod['id']; ?>" <?php if ($model_filter == $mod['id']) echo 'selected'; ?>><?php echo htmlspecialchars($mod['name']); ?></option>
+        <?php endforeach; ?>
+      </select>
+  <input type="text" name="serial" id="serial" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all" placeholder="Serial Number..." value="<?php echo htmlspecialchars($serial_filter); ?>">
+  <select name="vendor" id="vendor" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+        <option value="">All Vendors</option>
+        <?php foreach ($vendors as $ven): ?>
+          <option value="<?php echo $ven['id']; ?>" <?php if ($vendor_filter == $ven['id']) echo 'selected'; ?>><?php echo htmlspecialchars($ven['name']); ?></option>
+        <?php endforeach; ?>
+      </select>
+  <select name="location" id="location" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+        <option value="">All Locations</option>
+        <?php foreach ($locations as $loc): ?>
+          <option value="<?php echo $loc['id']; ?>" <?php if ($location_filter == $loc['id']) echo 'selected'; ?>><?php echo htmlspecialchars($loc['name']); ?></option>
+        <?php endforeach; ?>
+      </select>
+      <a href="assets.php" class="inline-flex items-center gap-2 px-6 py-2 h-12 rounded-full bg-gradient-to-r from-blue-100 to-blue-300 text-blue-700 hover:from-blue-200 hover:to-blue-400 font-semibold transition shadow-sm border-0" id="clearFiltersBtn">Reset</a>
+      <span id="ajaxLoadingSpinner" class="hidden ml-2"><svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg></span>
     </div>
   </form>
 
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('searchForm');
+    const tableBody = document.querySelector('table.min-w-full tbody');
+    const clearBtn = document.getElementById('clearFiltersBtn');
+    const spinner = document.getElementById('ajaxLoadingSpinner');
+    function doAjaxFilter() {
+      if (!form || !tableBody) return;
+      if (spinner) spinner.classList.remove('hidden');
+      const formData = new FormData(form);
+      fetch('assets_table_ajax.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.text())
+      .then(html => {
+        tableBody.innerHTML = html;
+        if (spinner) spinner.classList.add('hidden');
+      });
+    }
+    if (form && tableBody) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        doAjaxFilter();
+      });
+      // Trigger AJAX on input/select change
+      form.querySelectorAll('input,select').forEach(function(el) {
+        el.addEventListener('change', function() {
+          doAjaxFilter();
+        });
+        if (el.tagName === 'INPUT' && el.type === 'text') {
+          el.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') return; // avoid double
+            doAjaxFilter();
+          });
+        }
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        form.reset();
+        doAjaxFilter();
+      });
+    }
+  });
+  </script>
+
   <!-- Action Bar -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
-    <h2 class="text-lg font-semibold text-gray-900">Assets (<?php echo number_format($total_records); ?> total)</h2>
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+  <h2 class="text-lg font-bold text-blue-800">Assets <span class="ml-2 text-blue-400 font-normal">(<?php echo number_format($total_records); ?> total)</span></h2>
     <div class="flex gap-2">
       <?php if (hasRole('manager')): ?>
-        <button type="button" onclick="openAddAssetModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold transition">
-          <!-- Heroicon: plus -->
+        <button type="button" onclick="openAddAssetModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold shadow-md hover:from-green-500 hover:to-green-700 transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
           Add New Asset
         </button>
-        <a href="import_assets.php" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 font-semibold transition">
-          <!-- Heroicon: arrow-down-tray -->
+        <a href="import_assets.php" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-200 to-blue-400 text-blue-900 font-semibold shadow-md hover:from-blue-300 hover:to-blue-500 transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-8m0 8l-4-4m4 4l4-4m-8 8h8a2 2 0 002-2V6a2 2 0 00-2-2h-8a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
           Import
         </a>
       <?php endif; ?>
-      <a href="export_assets.php" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 font-semibold transition">
-        <!-- Heroicon: arrow-up-tray -->
+      <a href="export_assets.php" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-gray-200 to-gray-400 text-gray-800 font-semibold shadow-md hover:from-gray-300 hover:to-gray-500 transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m0-8l-4 4m4-4l4 4m-8 8h8a2 2 0 002-2V6a2 2 0 00-2-2h-8a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
         Export
       </a>
     </div>
   </div>
 
-  <div class="bg-white shadow rounded-lg overflow-hidden">
+  <div class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl border border-blue-100 overflow-hidden">
     <?php if (empty($assets)): ?>
       <div class="text-center text-gray-400 py-12">
         <h3 class="text-lg font-semibold mb-2">No assets found</h3>
@@ -289,8 +337,8 @@ try {
       </div>
     <?php else: ?>
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+  <table class="min-w-full divide-y divide-blue-100 bg-white rounded-2xl overflow-hidden">
+          <thead class="bg-blue-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="asset_tag" data-order="<?php echo $sort === 'asset_tag' ? $order : 'asc'; ?>">
                 Asset Tag
@@ -312,11 +360,15 @@ try {
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-white divide-y divide-blue-100">
             <?php foreach ($assets as $asset): ?>
+              <?php
+                $asset_for_modal = $asset;
+                $asset_for_modal['can_edit_delete'] = (hasRole('manager') || hasRole('admin')) ? true : false;
+              ?>
               <tr>
                 <td class="px-6 py-4 whitespace-nowrap font-semibold text-blue-700 hover:underline">
-                  <button type="button" onclick="showAssetModal(<?php echo htmlspecialchars(json_encode($asset), ENT_QUOTES, 'UTF-8'); ?>)" class="focus:outline-none">
+                  <button type="button" onclick="showAssetModal(<?php echo htmlspecialchars(json_encode($asset_for_modal), ENT_QUOTES, 'UTF-8'); ?>)" class="focus:outline-none">
                     <?php echo htmlspecialchars($asset['asset_tag']); ?>
                   </button>
                 </td>
@@ -356,15 +408,10 @@ try {
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['assigned_employee_name'] ?? ''); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-700"><?php echo htmlspecialchars($asset['notes'] ?? ''); ?></td>
                 <td class="px-6 py-4 whitespace-nowrap flex gap-2">
-                  <button type="button" onclick="showAssetModal(<?php echo htmlspecialchars(json_encode($asset), ENT_QUOTES, 'UTF-8'); ?>)" class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition" title="View">
+                  <button type="button" onclick="showAssetModal(<?php echo htmlspecialchars(json_encode($asset_for_modal), ENT_QUOTES, 'UTF-8'); ?>)" class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition" title="View">
                     <!-- Heroicon: eye -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 0a9 9 0 0118 0a9 9 0 01-18 0z" /></svg>
                     View
-                  </button>
-                  <button type="button" onclick="showAssignmentHistoryModal(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES, 'UTF-8'); ?>')" class="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded hover:bg-purple-200 text-xs font-medium transition" title="Assignment History">
-                    <!-- Heroicon: clock -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Assignment
                   </button>
 <!-- Asset Details Modal -->
 <div id="assetDetailsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
@@ -382,9 +429,7 @@ try {
         <!-- Populated by JS -->
       </dl>
     </div>
-    <div class="flex justify-end gap-2 px-6 py-4 border-t bg-gray-50 rounded-b-lg">
-      <button type="button" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300" onclick="document.getElementById('assetDetailsModal').classList.add('hidden')">Close</button>
-    </div>
+  <!-- Modal footer is now managed by JS to avoid duplicate Close buttons -->
   </div>
 </div>
 <script>
@@ -397,13 +442,83 @@ function showAssetModal(asset) {
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Category:</dt><dd class="text-gray-900">${asset.category_name || ''}</dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Vendor:</dt><dd class="text-gray-900">${asset.vendor_name || ''}</dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Location:</dt><dd class="text-gray-900">${asset.location_name || ''}</dd></div>`;
-  html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Status:</dt><dd class="text-gray-900">${asset.status || ''}</dd></div>`;
+  // Status badge logic
+  let statusLabel = '';
+  let statusClass = '';
+  switch (asset.status) {
+    case 'active':
+      statusLabel = 'In Use';
+      statusClass = 'bg-green-100 text-green-800';
+      break;
+    case 'inactive':
+      statusLabel = 'Available';
+      statusClass = 'bg-blue-100 text-blue-800';
+      break;
+    case 'maintenance':
+      statusLabel = 'In Repair';
+      statusClass = 'bg-yellow-100 text-yellow-800';
+      break;
+    case 'retired':
+    case 'disposed':
+      statusLabel = 'Retired';
+      statusClass = 'bg-gray-200 text-gray-700';
+      break;
+    default:
+      statusLabel = asset.status || '';
+      statusClass = 'bg-gray-100 text-gray-700';
+  }
+  html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Status:</dt><dd><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusLabel}</span></dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Serial Number:</dt><dd class="text-gray-900">${asset.serial_number || ''}</dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">LAN MAC Address:</dt><dd class="text-gray-900">${asset.lan_mac || ''}</dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">WLAN MAC Address:</dt><dd class="text-gray-900">${asset.wlan_mac || ''}</dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Assigned Employee ID:</dt><dd class="text-gray-900">${asset.assigned_employee_id || ''}</dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Assigned Employee Name:</dt><dd class="text-gray-900">${asset.assigned_employee_name || ''}</dd></div>`;
   html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Note / Remarks:</dt><dd class="text-gray-900">${asset.notes || ''}</dd></div>`;
+  // Add Edit/Delete buttons if user is manager
+  let footer = document.querySelector('#assetDetailsModal .modal-footer');
+  if (!footer) {
+    // Create footer if not present
+    footer = document.createElement('div');
+    footer.className = 'modal-footer flex justify-end gap-2 px-6 py-4 border-t bg-gray-50 rounded-b-lg';
+    document.querySelector('#assetDetailsModal > div').appendChild(footer);
+  }
+  // Clear previous buttons
+  footer.innerHTML = '';
+  if (asset.can_edit_delete) {
+    // Edit button
+    const editBtn = document.createElement('a');
+    editBtn.href = `asset_edit.php?id=${asset.id}`;
+    editBtn.className = 'inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 text-xs font-medium transition';
+    editBtn.title = 'Edit';
+    editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" /></svg>Edit`;
+    footer.appendChild(editBtn);
+    // Delete button
+    const delBtn = document.createElement('a');
+    delBtn.href = `asset_delete.php?id=${asset.id}`;
+    delBtn.className = 'inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 text-xs font-medium transition';
+    delBtn.title = 'Delete';
+    delBtn.onclick = function() { return confirm('Are you sure you want to delete this asset?'); };
+    delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>Delete`;
+    footer.appendChild(delBtn);
+    // Assignment History button
+    const assignBtn = document.createElement('button');
+    assignBtn.type = 'button';
+    assignBtn.className = 'inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded hover:bg-purple-200 text-xs font-medium transition';
+    assignBtn.title = 'Assignment History';
+    assignBtn.onclick = function() {
+      modal.classList.add('hidden');
+      showAssignmentHistoryModal(asset.id, asset.asset_tag);
+    };
+    assignBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Assignment`;
+    footer.appendChild(assignBtn);
+  }
+  // Always add Close button
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300';
+  closeBtn.onclick = function() { modal.classList.add('hidden'); };
+  closeBtn.textContent = 'Close';
+  footer.appendChild(closeBtn);
   content.innerHTML = html;
   modal.classList.remove('hidden');
 }
@@ -454,18 +569,7 @@ function showAssignmentHistoryModal(assetId, assetTag) {
     });
 }
 </script>
-                  <?php if (hasRole('manager')): ?>
-                    <a href="asset_edit.php?id=<?php echo $asset['id']; ?>" class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 text-xs font-medium transition" title="Edit">
-                      <!-- Heroicon: pencil -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" /></svg>
-                      Edit
-                    </a>
-                    <a href="asset_delete.php?id=<?php echo $asset['id']; ?>" class="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 text-xs font-medium transition" title="Delete" onclick="return confirm('Are you sure you want to delete this asset?');">
-                      <!-- Heroicon: trash -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                      Delete
-                    </a>
-                  <?php endif; ?>
+                  <!-- Edit/Delete buttons removed: actions are now modal-only -->
                 </td>
               </tr>
             <?php endforeach; ?>
