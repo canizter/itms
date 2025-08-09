@@ -1,4 +1,4 @@
-# IT Management System (ITMS) v1.5.3
+# IT Management System (ITMS) v1.5.4
 
 ## Overview
 ITMS is a web-based application for managing IT assets, consumables, employees, and related transactions. It provides robust tracking, history, and reporting features for IT departments.
@@ -24,13 +24,15 @@ ITMS is a web-based application for managing IT assets, consumables, employees, 
 4. Login with default admin credentials: `admin` / `admin123`
 
 
-## Upgrade to v1.5.3
-- Run the migration script in `db/migrations/2025-08-07-itms-schema.sql` and `db/migrations/2025-08-07-itms-v1.5.3.sql` on your production database
-- All documentation and UI now reference version 1.5.3
+## Upgrade to v1.5.4
+- Run the migration script in `db/migrations/2025-08-07-itms-full-schema-v1.5.3.sql` if you need a fresh install, or apply incremental scripts as needed.
+- All documentation and UI now reference version 1.5.4
 
-## Version 1.5.3 (2025-08-07)
-- Asset import now records assignment history in asset_assignments when assigning via CSV
-- Minor documentation and versioning updates
+## Version 1.5.4 (2025-08-09)
+- Dashboard statistics use correct status values (active/inactive/maintenance)
+- Recent assets table includes model and serial number columns
+- Removed 'Manage your IT inventory assets' text from assets page
+- Added full schema SQL to migrations folder
 
 ## Version 1.5.1 (2025-08-07)
 - Asset list now displays Model and Notes columns

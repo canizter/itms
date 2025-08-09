@@ -2,7 +2,13 @@
 # Changelog
 - Footer and documentation updated to version 1.5
 
-## [1.5.3] - 2025-08-07
+# [1.5.4] - 2025-08-09
+
+### Changed
+- Dashboard statistics queries now use correct status values (active/inactive/maintenance).
+- Recent assets table now includes model and serial number columns.
+- Removed 'Manage your IT inventory assets' text from assets page.
+- Added full schema SQL to migrations folder.
 ### Added
 - Asset import now records assignment history in asset_assignments when assigning via CSV
 

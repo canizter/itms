@@ -192,7 +192,7 @@ try {
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
   <div class="mb-8">
     <h1 class="text-2xl font-bold tracking-tight text-gray-900">Assets Management</h1>
-    <p class="text-gray-500 text-sm">Manage your IT inventory assets</p>
+
   </div>
 
   <!-- Search and Filter Bar -->

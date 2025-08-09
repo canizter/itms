@@ -8,17 +8,17 @@ try {
     
     // Get dashboard statistics
     $stats = [];
-    // Total assets (not retired)
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status != 'Retired'");
+    // Total assets (not disposed)
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status != 'disposed'");
     $stats['total_assets'] = $stmt->fetch()['total'];
-    // In Use assets
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'In Use'");
+    // In Use assets (active)
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'active'");
     $stats['in_use_assets'] = $stmt->fetch()['total'];
-    // Available assets
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'Available'");
+    // Available assets (inactive)
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'inactive'");
     $stats['available_assets'] = $stmt->fetch()['total'];
-    // In Repair assets
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'In Repair'");
+    // In Repair assets (maintenance)
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM assets WHERE status = 'maintenance'");
     $stats['in_repair_assets'] = $stmt->fetch()['total'];
     // Assets by category
     $stmt = $pdo->query("
@@ -37,6 +37,17 @@ try {
         LEFT JOIN categories c ON a.category_id = c.id
         LEFT JOIN vendors v ON a.vendor_id = v.id  
         LEFT JOIN locations l ON a.location_id = l.id
+        WHERE a.status != 'disposed'
+        ORDER BY a.created_at DESC 
+        LIMIT 10
+    ");
+    $stmt = $pdo->query("
+        SELECT a.*, c.name as category_name, v.name as vendor_name, l.name as location_name, m.name as model_name, a.serial_number
+        FROM assets a 
+        LEFT JOIN categories c ON a.category_id = c.id
+        LEFT JOIN vendors v ON a.vendor_id = v.id  
+        LEFT JOIN locations l ON a.location_id = l.id
+        LEFT JOIN models m ON a.model_id = m.id
         WHERE a.status != 'disposed'
         ORDER BY a.created_at DESC 
         LIMIT 10
@@ -107,6 +118,8 @@ try {
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -119,6 +132,8 @@ try {
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['category_name'] ?? 'N/A'); ?></td>
                   <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['vendor_name'] ?? 'N/A'); ?></td>
+                  <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['model_name'] ?? 'N/A'); ?></td>
+                  <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($asset['serial_number'] ?? 'N/A'); ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
