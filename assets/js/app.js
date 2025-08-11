@@ -1,3 +1,122 @@
+// Ensure modal functions are always available after AJAX updates
+function reattachAssetModalFunctions() {
+    window.showAssetModal = window.showAssetModal;
+    window.showAssignmentHistoryModal = window.showAssignmentHistoryModal;
+}
+document.addEventListener('DOMContentLoaded', reattachAssetModalFunctions);
+// If you use AJAX to update the asset table, call reattachAssetModalFunctions() after update.
+// Asset Modal Functions (moved from assets.php for global access)
+window.showAssetModal = function(asset) {
+    const modal = document.getElementById('assetDetailsModal');
+    const content = document.getElementById('assetDetailsContent');
+    let html = '';
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Asset Tag:</dt><dd class="text-gray-900">${asset.asset_tag || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Category:</dt><dd class="text-gray-900">${asset.category_name || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Vendor:</dt><dd class="text-gray-900">${asset.vendor_name || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Location:</dt><dd class="text-gray-900">${asset.location_name || ''}</dd></div>`;
+    let statusLabel = '';
+    let statusClass = '';
+    switch (asset.status) {
+        case 'active': statusLabel = 'In Use'; statusClass = 'bg-green-100 text-green-800'; break;
+        case 'inactive': statusLabel = 'Available'; statusClass = 'bg-blue-100 text-blue-800'; break;
+        case 'maintenance': statusLabel = 'In Repair'; statusClass = 'bg-yellow-100 text-yellow-800'; break;
+        case 'retired': case 'disposed': statusLabel = 'Retired'; statusClass = 'bg-gray-200 text-gray-700'; break;
+        default: statusLabel = asset.status || ''; statusClass = 'bg-gray-100 text-gray-700';
+    }
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Status:</dt><dd><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusLabel}</span></dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Serial Number:</dt><dd class="text-gray-900">${asset.serial_number || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">LAN MAC Address:</dt><dd class="text-gray-900">${asset.lan_mac || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">WLAN MAC Address:</dt><dd class="text-gray-900">${asset.wlan_mac || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Assigned Employee ID:</dt><dd class="text-gray-900">${asset.assigned_employee_id || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Assigned Employee Name:</dt><dd class="text-gray-900">${asset.assigned_employee_name || ''}</dd></div>`;
+    html += `<div class="flex justify-between py-2"><dt class="font-medium text-gray-700">Note / Remarks:</dt><dd class="text-gray-900">${asset.notes || ''}</dd></div>`;
+    let footer = document.querySelector('#assetDetailsModal .modal-footer');
+    if (!footer) {
+        footer = document.createElement('div');
+        footer.className = 'modal-footer flex justify-end gap-2 px-6 py-4 border-t bg-gray-50 rounded-b-lg';
+        document.querySelector('#assetDetailsModal > div').appendChild(footer);
+    }
+    footer.innerHTML = '';
+    if (asset.can_edit_delete) {
+        const editBtn = document.createElement('a');
+        editBtn.href = `asset_edit.php?id=${asset.id}`;
+        editBtn.className = 'inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 text-xs font-medium transition';
+        editBtn.title = 'Edit';
+        editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" /></svg>Edit`;
+        footer.appendChild(editBtn);
+        const delBtn = document.createElement('a');
+        delBtn.href = `asset_delete.php?id=${asset.id}`;
+        delBtn.className = 'inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 text-xs font-medium transition';
+        delBtn.title = 'Delete';
+        delBtn.onclick = function() { return confirm('Are you sure you want to delete this asset?'); };
+        delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>Delete`;
+        footer.appendChild(delBtn);
+        const assignBtn = document.createElement('button');
+        assignBtn.type = 'button';
+        assignBtn.className = 'inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded hover:bg-purple-200 text-xs font-medium transition';
+        assignBtn.title = 'Assignment History';
+        assignBtn.onclick = function() {
+            modal.classList.add('hidden');
+            window.showAssignmentHistoryModal(asset.id, asset.asset_tag);
+        };
+        assignBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Assignment`;
+        footer.appendChild(assignBtn);
+    }
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300';
+    closeBtn.onclick = function() { modal.classList.add('hidden'); };
+    closeBtn.textContent = 'Close';
+    footer.appendChild(closeBtn);
+    content.innerHTML = html;
+    modal.classList.remove('hidden');
+};
+
+window.showAssignmentHistoryModal = function(assetId, assetTag) {
+    const modal = document.getElementById('assignmentHistoryModal');
+    const content = document.getElementById('assignmentHistoryContent');
+    const tagSpan = document.getElementById('assignmentHistoryAssetTag');
+    tagSpan.textContent = assetTag;
+    content.innerHTML = '<div class="text-gray-500 text-sm">Loading...</div>';
+    modal.classList.remove('hidden');
+    fetch('asset_assignment_history_api.php?asset_id=' + encodeURIComponent(assetId))
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                content.innerHTML = `<div class='bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-sm'>${data.error}</div>`;
+                return;
+            }
+            if (!data.history || data.history.length === 0) {
+                content.innerHTML = '<div class="text-gray-500 text-sm">No assignment history found for this asset.</div>';
+                return;
+            }
+            let html = '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead><tr>' +
+                '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee ID</th>' +
+                '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee Name</th>' +
+                '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assigned By</th>' +
+                '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assigned Date</th>' +
+                '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Return Date</th>' +
+                '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>' +
+                '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Recorded</th>' +
+                '</tr></thead><tbody>';
+            for (const row of data.history) {
+                html += '<tr>' +
+                    `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.employee_id || ''}</td>` +
+                    `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.employee_name || ''}</td>` +
+                    `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.assigned_by || ''}</td>` +
+                    `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.assigned_date || ''}</td>` +
+                    `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.return_date || ''}</td>` +
+                    `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.notes || ''}</td>` +
+                    `<td class="px-4 py-2 whitespace-nowrap text-gray-700">${row.created_at || ''}</td>` +
+                    '</tr>';
+            }
+            html += '</tbody></table></div>';
+            content.innerHTML = html;
+        })
+        .catch(err => {
+            content.innerHTML = `<div class='bg-red-100 text-red-700 px-4 py-2 rounded mb-3 text-sm'>Error loading assignment history.</div>`;
+        });
+};
 // IT Management System JavaScript
 
 // Global variables

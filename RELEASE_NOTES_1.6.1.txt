@@ -1,0 +1,10 @@
+# ITMS v1.6.1 Release Notes
+
+## What's new in v1.6.1 (2025-08-11)
+- Search module UI improved: now 2 rows, left/right aligned, more compact
+- Serial number textbox removed from search
+- All dropdowns and text boxes resized for consistency
+- Reset button moved to the right of Search button
+- Bug fixes and usability improvements
+
+**Release Date:** August 11, 2025

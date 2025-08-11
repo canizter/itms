@@ -207,99 +207,59 @@ try {
   </div>
 
   <!-- Search and Filter Bar -->
-  <form method="GET" action="assets.php" id="searchForm" class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl p-6 mb-8 border border-blue-100">
-    <div class="flex flex-wrap gap-3 items-center justify-between">
-      <div class="relative flex items-center min-w-[240px] flex-1">
-  <input type="text" name="search" id="search" class="peer pl-12 pr-4 border-0 ring-2 ring-blue-200 focus:ring-blue-500 bg-white rounded-full py-3 h-12 text-sm focus:outline-none w-full transition-all placeholder-transparent" placeholder=" " value="<?php echo htmlspecialchars($search); ?>">
+  <form method="GET" action="assets.php" id="searchForm" class="bg-gradient-to-br from-white to-blue-50 shadow-xl rounded-2xl p-4 mb-8 border border-blue-100">
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-wrap gap-2 items-center w-full justify-start">
+  <div class="relative flex items-center min-w-[140px] flex-shrink-0">
+  <input type="text" name="search" id="search" class="peer pl-12 pr-2 border-0 ring-2 ring-blue-200 focus:ring-blue-500 bg-white rounded-full py-1 h-10 text-xs focus:outline-none min-w-[90px] flex-shrink-0 transition-all placeholder-transparent" placeholder=" " value="<?php echo htmlspecialchars($search); ?>">
   <label for="search" class="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs peer-focus:text-blue-600 bg-white px-1">Search assets...</label>
         <span class="absolute left-4 text-blue-400 pointer-events-none">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" /></svg>
         </span>
       </div>
-  <select name="category" id="category" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[140px] transition-all">
+  <select name="category" id="category" class="rounded-full px-2 py-1 h-10 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-xs focus:outline-none min-w-[80px] flex-shrink-0 transition-all">
         <option value="">All Categories</option>
         <?php foreach ($categories as $cat): ?>
           <option value="<?php echo $cat['id']; ?>" <?php if ($category_filter == $cat['id']) echo 'selected'; ?>><?php echo htmlspecialchars($cat['name']); ?></option>
         <?php endforeach; ?>
       </select>
-  <select name="status" id="status" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+  <select name="status" id="status" class="rounded-full px-2 py-1 h-10 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-xs focus:outline-none min-w-[70px] flex-shrink-0 transition-all">
         <option value="">All Statuses</option>
         <option value="active" <?php if ($status_filter == 'active') echo 'selected'; ?>>In Use</option>
         <option value="inactive" <?php if ($status_filter == 'inactive') echo 'selected'; ?>>Available</option>
         <option value="maintenance" <?php if ($status_filter == 'maintenance') echo 'selected'; ?>>In Repair</option>
         <option value="disposed" <?php if ($status_filter == 'disposed') echo 'selected'; ?>>Retired</option>
       </select>
-  <select name="model" id="model" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+  <select name="model" id="model" class="rounded-full px-2 py-1 h-10 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-xs focus:outline-none min-w-[70px] flex-shrink-0 transition-all">
         <option value="">All Models</option>
         <?php foreach ($models as $mod): ?>
           <option value="<?php echo $mod['id']; ?>" <?php if ($model_filter == $mod['id']) echo 'selected'; ?>><?php echo htmlspecialchars($mod['name']); ?></option>
         <?php endforeach; ?>
       </select>
-  <input type="text" name="serial" id="serial" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all" placeholder="Serial Number..." value="<?php echo htmlspecialchars($serial_filter); ?>">
-  <select name="vendor" id="vendor" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+  <select name="vendor" id="vendor" class="rounded-full px-2 py-1 h-10 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-xs focus:outline-none min-w-[70px] flex-shrink-0 transition-all">
         <option value="">All Vendors</option>
         <?php foreach ($vendors as $ven): ?>
           <option value="<?php echo $ven['id']; ?>" <?php if ($vendor_filter == $ven['id']) echo 'selected'; ?>><?php echo htmlspecialchars($ven['name']); ?></option>
         <?php endforeach; ?>
       </select>
-  <select name="location" id="location" class="rounded-full px-4 py-2 h-12 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-sm focus:outline-none min-w-[120px] transition-all">
+  <select name="location" id="location" class="rounded-full px-2 py-1 h-10 border-0 ring-2 ring-blue-100 focus:ring-blue-400 bg-white text-xs focus:outline-none min-w-[70px] flex-shrink-0 transition-all">
         <option value="">All Locations</option>
         <?php foreach ($locations as $loc): ?>
           <option value="<?php echo $loc['id']; ?>" <?php if ($location_filter == $loc['id']) echo 'selected'; ?>><?php echo htmlspecialchars($loc['name']); ?></option>
         <?php endforeach; ?>
       </select>
-      <a href="assets.php" class="inline-flex items-center gap-2 px-6 py-2 h-12 rounded-full bg-gradient-to-r from-blue-100 to-blue-300 text-blue-700 hover:from-blue-200 hover:to-blue-400 font-semibold transition shadow-sm border-0" id="clearFiltersBtn">Reset</a>
-      <span id="ajaxLoadingSpinner" class="hidden ml-2"><svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg></span>
+      </div>
+      <div class="flex flex-wrap gap-2 items-center w-full mt-1 justify-end">
+        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 h-9 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 text-white hover:from-blue-500 hover:to-blue-700 font-semibold transition shadow-sm border-0 flex-shrink-0 text-xs" id="searchBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" /></svg>
+          Search
+        </button>
+        <a href="assets.php" class="inline-flex items-center gap-1 px-3 py-1 h-9 rounded-full bg-gradient-to-r from-blue-100 to-blue-300 text-blue-700 hover:from-blue-200 hover:to-blue-400 font-semibold transition shadow-sm border-0 flex-shrink-0 text-xs" id="clearFiltersBtn">Reset</a>
+        <span id="ajaxLoadingSpinner" class="hidden ml-2"><svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><circle class="opacity-25" cx="12" cy="12" r="10"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg></span>
+      </div>
     </div>
   </form>
 
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('searchForm');
-    const tableBody = document.querySelector('table.min-w-full tbody');
-    const clearBtn = document.getElementById('clearFiltersBtn');
-    const spinner = document.getElementById('ajaxLoadingSpinner');
-    function doAjaxFilter() {
-      if (!form || !tableBody) return;
-      if (spinner) spinner.classList.remove('hidden');
-      const formData = new FormData(form);
-      fetch('assets_table_ajax.php', {
-        method: 'POST',
-        body: formData
-      })
-      .then(r => r.text())
-      .then(html => {
-        tableBody.innerHTML = html;
-        if (spinner) spinner.classList.add('hidden');
-      });
-    }
-    if (form && tableBody) {
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        doAjaxFilter();
-      });
-      // Trigger AJAX on input/select change
-      form.querySelectorAll('input,select').forEach(function(el) {
-        el.addEventListener('change', function() {
-          doAjaxFilter();
-        });
-        if (el.tagName === 'INPUT' && el.type === 'text') {
-          el.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') return; // avoid double
-            doAjaxFilter();
-          });
-        }
-      });
-    }
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        form.reset();
-        doAjaxFilter();
-      });
-    }
-  });
-  </script>
 
   <!-- Action Bar -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">

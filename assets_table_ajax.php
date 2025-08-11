@@ -103,9 +103,14 @@ foreach ($assets as $asset) {
     echo '<td class="px-6 py-4 whitespace-nowrap text-gray-700">' . htmlspecialchars($asset['assigned_employee_id'] ?? '') . '</td>';
     echo '<td class="px-6 py-4 whitespace-nowrap text-gray-700">' . htmlspecialchars($asset['assigned_employee_name'] ?? '') . '</td>';
     echo '<td class="px-6 py-4 whitespace-nowrap text-gray-700">' . htmlspecialchars($asset['notes'] ?? '') . '</td>';
+    // Prepare asset data for JS (as in main page)
+    $asset_for_modal = $asset;
+    $asset_for_modal['can_edit_delete'] = (hasRole('manager') || hasRole('admin')) ? true : false;
+    $asset_json = htmlspecialchars(json_encode($asset_for_modal), ENT_QUOTES, 'UTF-8');
     echo '<td class="px-6 py-4 whitespace-nowrap flex gap-2">';
-    echo '<button type="button" class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition" title="View">View</button>';
-    echo '<button type="button" class="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded hover:bg-purple-200 text-xs font-medium transition" title="Assignment History">Assignment</button>';
+    echo '<button type="button" onclick="showAssetModal(' . $asset_json . ')" class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs font-medium transition" title="View">';
+    echo '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 0a9 9 0 0118 0a9 9 0 01-18 0z" /></svg>View';
+    echo '</button>';
     echo '</td>';
     echo '</tr>';
 }
