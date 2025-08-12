@@ -47,4 +47,7 @@ ITMS is a web-based application for managing IT assets, consumables, employees, 
 MIT License
 
 ---
+
+**Author:** Jasper Sevilla  
+**AI Assistant:** GitHub Copilot  
 Developed for efficient IT asset management.

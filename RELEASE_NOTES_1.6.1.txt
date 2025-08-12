@@ -8,3 +8,7 @@
 - Bug fixes and usability improvements
 
 **Release Date:** August 11, 2025
+
+---
+Author: Jasper Sevilla
+AI Assistant: GitHub Copilot

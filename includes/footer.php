@@ -5,7 +5,8 @@
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
                 <p>&copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?> v1.6.1. All rights reserved.</p>
             <p style="font-size: 0.9rem; margin-top: 0.5rem;">
-                Developed for efficient IT asset management | 
+                Developed for efficient IT asset management<br>
+                <strong>Author:</strong> Jasper Sevilla &nbsp;|&nbsp; <strong>AI Assistant:</strong> GitHub Copilot<br>
                 <a href="http://help.linc-fs.com" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">Support</a>
             </p>
         </div>
